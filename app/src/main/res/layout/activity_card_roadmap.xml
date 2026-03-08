@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    tools:context=".cardRoadmapActivity">
+
+
+
+    <TextView
+        android:id="@+id/txtTitletest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="45dp"
+        android:text=""
+        tools:text="Career AI Coach"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="45dp"
+        android:text=""
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/txtSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="커리어 경로"
+        android:textSize="12sp"
+        android:textColor="#4C4C4C"
+        android:layout_marginStart="22dp"
+        android:layout_marginTop="6dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTitle"/>
+
+
+
+    <ImageButton
+        android:id="@+id/btnMenu"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="20dp"
+        android:src="@drawable/group_1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="0dp"
+        android:contentDescription="@string/app_name"
+        app:layout_constraintBottom_toBottomOf="@id/txtTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/txtTitle" />
+
+
+
+    <!-- 하단 탭 -->
+    <LinearLayout
+        android:id="@+id/bottomTab"
+        android:layout_width="0dp"
+        android:layout_height="74dp"
+        android:background="#FFFFFF"
+        android:gravity="top"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/btnNoticeh"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+
+            android:text="홈"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+
+
+        <TextView
+            android:id="@+id/btnNoticej"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+
+            android:text="공고"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+
+
+        <TextView
+            android:id="@+id/btnNoticev"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+
+            android:text="대시보드"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+
+
+        <TextView
+            android:id="@+id/btnNoticev2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+
+            android:text="MY"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,1149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    tools:context=".DashboardActivity">
+
+    <!-- 상단 타이틀 영역 -->
+    <TextView
+        android:id="@+id/txtTitletest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="45dp"
+        android:text=""
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:text="Career AI Coach"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="45dp"
+        android:text=""
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txtSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="22dp"
+        android:layout_marginTop="6dp"
+        android:text="대시보드"
+        android:textColor="#4C4C4C"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTitle" />
+
+    <ImageButton
+        android:id="@+id/btnMenu"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/app_name"
+        android:padding="0dp"
+        android:src="@drawable/group_1"
+        app:layout_constraintBottom_toBottomOf="@id/txtTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/txtTitle" />
+
+    <!-- 스크롤 영역: txtSubtitle 아래 ~ bottomTab 위 -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollDashboard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@id/txtSubtitle"
+        app:layout_constraintBottom_toTopOf="@id/bottomTab"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:id="@+id/dashboardRoot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="14dp">
+
+            <!-- 1) 평균/최고 점수 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="180dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="6dp"
+                    app:strokeWidth="0dp"
+                    app:cardUseCompatPadding="true"
+                    android:backgroundTint="#FFFFFF"
+                    >
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="이력서 평균"
+                            android:textSize="12sp"
+                            android:textColor="#777777"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical"
+
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/txtAvgScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="75"
+                                android:textSize="50sp"
+                                android:textStyle="bold"
+                                android:textColor="#3950E7" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="/100점"
+                                android:textSize="12sp"
+                                android:textColor="#777777"
+                                android:layout_marginBottom="1dp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="180dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="6dp"
+                    app:strokeWidth="0dp"
+                    app:cardUseCompatPadding="true"
+                    android:backgroundTint="#FFFFFF"
+                    >
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="면접 평균"
+                            android:textSize="12sp"
+                            android:textColor="#777777"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/txtMaxScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="82"
+                                android:textSize="50sp"
+                                android:textStyle="bold"
+                                android:textColor="#3950E7" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+
+                                android:text="/100점"
+                                android:textSize="12sp"
+                                android:textColor="#777777"
+                                android:layout_marginBottom="6dp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- 2) 성장 추이 (그래프 자리) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="6dp"
+                app:cardUseCompatPadding="true"
+                app:strokeWidth="0dp"
+                android:backgroundTint="#FFFFFF"
+                >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="성장 추이"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#111111" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="면접 연습 회차별 점수 변화"
+                        android:textSize="11sp"
+                        android:textColor="#777777"
+                        android:layout_marginTop="4dp" />
+
+                    <View
+                        android:id="@+id/chartLinePlaceholder"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:layout_marginTop="12dp"
+                        android:background="#F2F2F2" />
+
+                    <!-- 작은 통계 3개 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:cardBackgroundColor="#F2F2F2">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:id="@+id/txtPlusScore"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="+13"
+                                    android:textSize="23sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="점수 향상"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <Space
+                            android:layout_width="10dp"
+                            android:layout_height="1dp" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:cardBackgroundColor="#F2F2F2">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:id="@+id/txtTotalRound"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="5회"
+                                    android:textSize="23sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="총 연습"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <Space
+                            android:layout_width="10dp"
+                            android:layout_height="1dp" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:cardBackgroundColor="#F2F2F2">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:id="@+id/txtGrowthRate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="20%"
+                                    android:textSize="23sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="성장률"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 3) 역량별 평균 점수  -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:strokeWidth="0dp"
+                app:cardElevation="6dp"
+                app:cardUseCompatPadding="true"
+                android:backgroundTint="#FFFFFF"
+                >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="역량별 평균 점수"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#111111" />
+
+                    <com.github.mikephil.charting.charts.RadarChart
+                        android:id="@+id/radarChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="320dp"
+                        android:layout_marginTop="12dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 4) 말하기 패턴 요약 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="6dp"
+                app:strokeWidth="0dp"
+                app:cardUseCompatPadding="true"
+                android:backgroundTint="#FFFFFF"
+                >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="말하기 패턴 요약"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#111111" />
+
+                    <!-- 속도 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="말하기 속도"
+                            android:textSize="12sp"
+                            android:layout_marginLeft="5dp"
+                            android:textColor="#777777" />
+
+                        <TextView
+                            android:id="@+id/txtSpeedScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="5dp"
+                            android:text="85/100"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="#111111" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbSpeed"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:max="100"
+                        android:progress="85"
+                        android:layout_marginTop="6dp" />
+
+                    <!-- 자신감 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="자신감"
+                            android:layout_marginLeft="5dp"
+                            android:textSize="12sp"
+                            android:textColor="#777777" />
+
+                        <TextView
+                            android:id="@+id/txtConfidenceScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="82/100"
+                            android:layout_marginRight="5dp"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="#111111" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbConfidence"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:max="100"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:progress="82"
+                        android:layout_marginTop="6dp" />
+
+                    <!-- 발음 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="발음 명료도"
+                            android:layout_marginLeft="5dp"
+                            android:textSize="12sp"
+                            android:textColor="#777777" />
+
+                        <TextView
+                            android:id="@+id/txtPronScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="90/100"
+                            android:textSize="12sp"
+                            android:layout_marginRight="5dp"
+                            android:textStyle="bold"
+                            android:textColor="#111111" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbPron"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:max="100"
+                        android:progress="90"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:layout_marginTop="6dp" />
+
+                    <!-- 목소리 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="목소리 크기"
+                            android:layout_marginLeft="5dp"
+                            android:textSize="12sp"
+                            android:textColor="#777777" />
+
+                        <TextView
+                            android:id="@+id/txtVolumeScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="88/100"
+                            android:layout_marginRight="5dp"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="#111111" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbVolume"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:max="100"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:progress="88"
+                        android:layout_marginTop="6dp" />
+
+                    <!-- 필러워드/숨 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:cardBackgroundColor="#F2F2F2">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="필러워드"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777" />
+
+                                <TextView
+                                    android:id="@+id/txtFillerCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="5.2"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="회"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="“음”, “어” 등"
+                                    android:textSize="10sp"
+                                    android:textColor="#777777"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <Space
+                            android:layout_width="10dp"
+                            android:layout_height="1dp" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:cardBackgroundColor="#F2F2F2">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="숨"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777" />
+
+                                <TextView
+                                    android:id="@+id/txtBreathCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="7.2"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="회"
+                                    android:textSize="11sp"
+                                    android:textColor="#777777" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="호흡 조절"
+                                    android:textSize="10sp"
+                                    android:textColor="#777777"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 5) 최근 면접 기록 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="6dp"
+                app:strokeWidth="0dp"
+                app:cardUseCompatPadding="true"
+                android:backgroundTint="#FFFFFF"
+                >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="최근 면접 기록"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#111111" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="지난 5회 면접 연습 결과"
+                        android:textSize="11sp"
+                        android:textColor="#777777"
+                        android:layout_marginTop="4dp" />
+
+                    <!-- 리스트(데모상태) -->
+               <androidx.recyclerview.widget.RecyclerView
+                   android:layout_width="match_parent"
+                   android:layout_height="wrap_content"
+                   android:id="@+id/rvRecentInterview"
+                   android:nestedScrollingEnabled="false"
+                   tools:listitem="@layout/item_interview"/>
+
+
+                    <!-- 전체 기록 보기 버튼 -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAllRecords"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="14dp"
+                        android:text="전체 기록 보기 →"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        app:backgroundTint="#111111"
+                        app:cornerRadius="12dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 6) 학습 현황 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="6dp"
+                app:strokeWidth="0dp"
+                app:cardUseCompatPadding="true"
+                android:backgroundTint="#FFFFFF"
+                >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="학습 현황"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#111111" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="진행 중인 학습 과제 및 목표 달성률"
+                        android:textSize="11sp"
+                        android:textColor="#777777"
+                        android:layout_marginTop="4dp" />
+
+                    <!-- 2x2 카드 -->
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/todoContainer"
+                      android:layout_marginTop="12dp"
+                      android:orientation="vertical"/>
+
+
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 7) 직무 적합도 분석 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="6dp"
+                app:strokeWidth="0dp"
+                app:cardUseCompatPadding="true"
+                android:backgroundTint="#FFFFFF"
+                >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="직무 적합도 분석"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#111111" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="현재 역량 기반 추천 직무 및 매칭률"
+                        android:textSize="11sp"
+                        android:textColor="#777777"
+                        android:layout_marginTop="4dp" />
+
+                    <!-- 카드 1 -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        app:cardBackgroundColor="#F2F2F2">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="14dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="프론트엔드 개발자"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111" />
+
+                                <TextView
+                                    android:id="@+id/txtFit1"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="92%"
+                                    android:textSize="31sp"
+                                    android:layout_marginTop="2dp"
+                                    android:layout_marginRight="5dp"
+                                    android:textColor="#2EAF4B" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="보유 스킬"
+                                android:layout_marginLeft="5dp"
+                                android:textSize="11sp"
+                                android:textColor="#777777"
+                                android:layout_marginTop="15dp" />
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                app:chipSpacingHorizontal="6dp"
+                                app:chipSpacingVertical="6dp">
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="React"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="TypeScript"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="HTML/CSS"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+                            </com.google.android.material.chip.ChipGroup>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="5dp"
+                                android:text="필요 스킬"
+                                android:textSize="11sp"
+                                android:textColor="#777777"
+                                android:layout_marginTop="10dp" />
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                app:chipSpacingHorizontal="6dp"
+                                app:chipSpacingVertical="6dp">
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="성능 최적화"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+                            </com.google.android.material.chip.ChipGroup>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- 카드 2 -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        app:cardBackgroundColor="#F2F2F2">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="14dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="UI/UX 개발자"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#111111" />
+
+                                <TextView
+                                    android:id="@+id/txtFit2"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="85%"
+                                    android:textSize="31sp"
+                                    android:layout_marginTop="2dp"
+                                    android:layout_marginRight="5dp"
+                                    android:textColor="#3950E7" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="보유 스킬"
+                                android:textSize="11sp"
+                                android:layout_marginLeft="5dp"
+                                android:textColor="#777777"
+                                android:layout_marginTop="15dp" />
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                app:chipSpacingHorizontal="6dp"
+                                app:chipSpacingVertical="6dp">
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="React"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="UX 기초"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="HTML/CSS"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+                            </com.google.android.material.chip.ChipGroup>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="필요 스킬"
+                                android:textSize="11sp"
+                                android:layout_marginLeft="5dp"
+                                android:textColor="#777777"
+                                android:layout_marginTop="10dp" />
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                app:chipSpacingHorizontal="6dp"
+                                app:chipSpacingVertical="6dp">
+
+                                <com.google.android.material.chip.Chip
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="디자인 툴 숙련도"
+                                    android:textColor="#FFFFFF"
+                                    app:chipBackgroundColor="#111111"
+                                    app:chipCornerRadius="18dp"
+                                    app:chipStrokeWidth="0dp" />
+                            </com.google.android.material.chip.ChipGroup>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- 하단 탭 -->
+    <LinearLayout
+        android:id="@+id/bottomTab"
+        android:layout_width="0dp"
+        android:layout_height="74dp"
+        android:background="#FFFFFF"
+        android:gravity="top"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/btnNoticeh"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:text="홈"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+
+        <TextView
+            android:id="@+id/btnRoadmap"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:text="커리어\n경로"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+
+        <TextView
+            android:id="@+id/btnNoticev"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:text="학습추천"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+
+        <TextView
+            android:id="@+id/btnNoticev2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:text="MY"
+            android:textColor="#111111"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@null"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
