@@ -1,75 +1,105 @@
 package com.example.cac
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
+import android.util.Log
+import android.view.Gravity
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.LinearLayout
-import androidx.recyclerview.widget.RecyclerView
-import okhttp3.*
-import java.io.IOException
-import com.example.cac.ui.adapter.InterviewAdapter
-import com.example.cac.data.InterviewItem
 import androidx.recyclerview.widget.LinearLayoutManager
-import android.graphics.Paint
-import android.content.Context
-import android.view.Gravity
-import com.example.cac.RoadmapActivity
-import org.json.JSONArray
+import androidx.recyclerview.widget.RecyclerView
+import com.example.cac.data.InterviewItem
+import com.example.cac.network.DashboardHistory
+import com.example.cac.network.DashboardResponse
+import com.example.cac.network.RetrofitClient
+import com.example.cac.ui.adapter.InterviewAdapter
+import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.RadarChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.data.RadarData
 import com.github.mikephil.charting.data.RadarDataSet
 import com.github.mikephil.charting.data.RadarEntry
-import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.formatter.ValueFormatter
-
-private lateinit var todoContainer: LinearLayout
-private lateinit var radarChart: RadarChart
+import org.json.JSONArray
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class DashboardActivity : AppCompatActivity() {
 
-    private val client = OkHttpClient()
+    private lateinit var txtAvgDocumentScore: TextView
+    private lateinit var txtAvgInterviewScore: TextView
+    private lateinit var txtScoreImprovement: TextView
+    private lateinit var txtTotalCount: TextView
+    private lateinit var txtGrowthRate: TextView
+
+    private lateinit var lineChart: LineChart
+    private lateinit var radarChart: RadarChart
+    private lateinit var todoContainer: LinearLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_dashboard)
 
-        //차트
+        bindViews()
+        setupTitle()
+        setupBottomButtons()
+        setupRecentInterview()
+        setupLearningTodoFromPrefs()
+        setupRadarFromPrefs()
+        loadDashboard()
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+    }
+
+    private fun bindViews() {
+        txtAvgDocumentScore = findViewById(R.id.txtAvgDocumentScore)
+        txtAvgInterviewScore = findViewById(R.id.txtAvgInterviewScore)
+        txtScoreImprovement = findViewById(R.id.txtScoreImprovement)
+        txtTotalCount = findViewById(R.id.txtTotalCount)
+        txtGrowthRate = findViewById(R.id.txtGrowthRate)
+
+        lineChart = findViewById(R.id.lineChart)
         radarChart = findViewById(R.id.radarChart)
-
-        val btnMy = findViewById<TextView>(R.id.btnNoticev2)
-        btnMy.setOnClickListener {
-            val intent = Intent(this, MYActivity::class.java)
-            startActivity(intent)
-        }
-
-        //학습현황
         todoContainer = findViewById(R.id.todoContainer)
+    }
 
-        val btnhome = findViewById<TextView>(R.id.btnNoticeh)
-        btnhome.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+    private fun setupBottomButtons() {
+        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
         }
 
-        val btnRoadmap=findViewById<TextView>(R.id.btnRoadmap)
-        btnRoadmap.setOnClickListener {
-            val intent = Intent(this, RoadmapActivity::class.java)
-            startActivity(intent)
+        findViewById<TextView>(R.id.btnRoadmap).setOnClickListener {
+            startActivity(Intent(this, RoadmapActivity::class.java))
         }
 
-        //면접 기록
+        findViewById<TextView>(R.id.btnNoticev2).setOnClickListener {
+            startActivity(Intent(this, MYActivity::class.java))
+        }
+    }
+
+    private fun setupRecentInterview() {
         val rvRecentInterview = findViewById<RecyclerView>(R.id.rvRecentInterview)
 
         val interviewList = listOf(
@@ -81,63 +111,142 @@ class DashboardActivity : AppCompatActivity() {
         )
 
         rvRecentInterview.layoutManager = LinearLayoutManager(this)
+        rvRecentInterview.adapter = InterviewAdapter(interviewList.take(5))
+    }
 
-val recentOnly=interviewList.take(5)
-        rvRecentInterview.adapter=InterviewAdapter(recentOnly)
+    private fun setupTitle() {
+        val title = findViewById<TextView>(R.id.txtTitle)
+        val text = "Career AI Coach"
+        val spannable = SpannableString(text)
 
-//타이틀
-            val title = findViewById<TextView>(R.id.txtTitle)
+        val blue = Color.parseColor("#3950E7")
+        val gray = Color.parseColor("#8A8A8A")
 
-            val text = "Career AI Coach"
-            val spannable = SpannableString(text)
+        spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 6, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(blue), 7, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 8, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 9, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 11, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(StyleSpan(Typeface.BOLD), 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-            val blue = Color.parseColor("#3950E7")
-            val gray = Color.parseColor("#8A8A8A")
+        title.text = spannable
+    }
 
-            // Career (C만 파란색, 나머지 회색)
-            spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    private fun loadDashboard() {
+        val token = Session.accessToken
+        if (token.isNullOrBlank()) {
+            Log.d("DASHBOARD", "token 없음")
+            return
+        }
 
-            // 공백(회색)
-            spannable.setSpan(ForegroundColorSpan(gray), 6, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        RetrofitClient.api.getDashboard("Bearer $token")
+            .enqueue(object : Callback<DashboardResponse> {
+                override fun onResponse(
+                    call: Call<DashboardResponse>,
+                    response: Response<DashboardResponse>
+                ) {
+                    if (!response.isSuccessful) {
+                        Log.d("DASHBOARD", "response fail code=${response.code()}")
+                        return
+                    }
 
-            // AI (A는 파란색, I는 회색)
-            spannable.setSpan(ForegroundColorSpan(blue), 7, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(ForegroundColorSpan(gray), 8, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    val body = response.body()
+                    Log.d("DASHBOARD", "body=$body")
 
-            // 공백(회색)
-            spannable.setSpan(ForegroundColorSpan(gray), 9, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    if (body == null) return
+                    applyDashboard(body)
+                }
 
-            // Coach (C만 파란색, 나머지 회색)
-            spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(
-                ForegroundColorSpan(gray),
-                11,
-                text.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
+                override fun onFailure(call: Call<DashboardResponse>, t: Throwable) {
+                    Log.d("DASHBOARD", "fail: ${t.message}")
+                }
+            })
+    }
 
-            title.text = spannable
+    private fun applyDashboard(data: DashboardResponse) {
+        txtAvgDocumentScore.text = ((data.avg_document_score ?: 0.0).toInt()).toString()
 
-
-            spannable.setSpan(
-                StyleSpan(Typeface.BOLD),
-                0,
-                text.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            title.text = spannable
-
-
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
+        if (data.avg_interview_score == null) {
+            txtAvgInterviewScore.text = "-"
+            txtAvgInterviewScore.textSize = 50f
+        } else {
+            txtAvgInterviewScore.text = data.avg_interview_score.toInt().toString()
+            txtAvgInterviewScore.textSize = 50f
+        }
+        txtScoreImprovement.text =
+            if (data.score_improvement == null) {
+                "0"
+            } else {
+                val value = data.score_improvement.toInt()
+                if (value > 0) "+$value" else "$value"
             }
 
+        txtTotalCount.text = "${data.total_count ?: 0}회"
 
+        txtGrowthRate.text =
+            if (data.growth_rate == null) "0%"
+            else "${data.growth_rate.toInt()}%"
 
+        setupGrowthChart(data.history ?: emptyList())
+        setupRadarFromDashboard(data)
+    }
 
+    private fun setupGrowthChart(history: List<DashboardHistory>) {
+        val entries = ArrayList<Entry>()
+
+        history.forEachIndexed { index, item ->
+            val x = (item.round ?: (index + 1)).toFloat()
+            val y = (item.total_score ?: 0.0).toFloat()
+            entries.add(Entry(x, y))
+        }
+
+        val dataSet = LineDataSet(entries, "")
+        dataSet.color = Color.parseColor("#4A5BFF")
+        dataSet.setCircleColor(Color.parseColor("#4A5BFF"))
+        dataSet.circleRadius = 4f
+        dataSet.lineWidth = 2f
+        dataSet.setDrawValues(false)
+
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
+
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.axisRight.isEnabled = false
+
+        lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        lineChart.xAxis.granularity = 1f
+        lineChart.xAxis.textColor = Color.parseColor("#999999")
+
+        lineChart.axisLeft.axisMinimum = 0f
+        lineChart.axisLeft.axisMaximum = 100f
+        lineChart.axisLeft.textColor = Color.parseColor("#999999")
+
+        lineChart.invalidate()
+    }
+
+    private fun setupRadarFromDashboard(data: DashboardResponse) {
+        val avg = data.competency_avg ?: return
+
+        val technical = (avg.technical ?: 0.0).toInt()
+        val passion = (avg.passion ?: 0.0).toInt()
+        val communication = (avg.communication ?: 0.0).toInt()
+        val collaboration = (avg.collaboration ?: 0.0).toInt()
+        val problemSolving = (avg.problem_solving ?: 0.0).toInt()
+
+        setupRadarChart(
+            technical = technical,
+            passion = passion,
+            communication = communication,
+            collaboration = collaboration,
+            problemSolving = problemSolving
+        )
+    }
+
+    private fun setupLearningTodoFromPrefs() {
         val learningList = loadLearningTodo()
 
         if (learningList.isNotEmpty()) {
@@ -150,20 +259,8 @@ val recentOnly=interviewList.take(5)
                 )
             )
         }
+    }
 
-
-        val scores = loadCompetencyScores()
-
-        setupRadarChart(
-            technical = scores[0],
-            passion = scores[1],
-            communication = scores[2],
-            collaboration = scores[3],
-            problemSolving = scores[4]
-        )
-
-
-        }
     private fun showLearningTodo(items: List<String>) {
         todoContainer.removeAllViews()
 
@@ -230,6 +327,17 @@ val recentOnly=interviewList.take(5)
         }
     }
 
+    private fun setupRadarFromPrefs() {
+        val scores = loadCompetencyScores()
+        setupRadarChart(
+            technical = scores[0],
+            passion = scores[1],
+            communication = scores[2],
+            collaboration = scores[3],
+            problemSolving = scores[4]
+        )
+    }
+
     private fun setupRadarChart(
         technical: Int,
         passion: Int,
@@ -251,8 +359,7 @@ val recentOnly=interviewList.take(5)
         dataSet.setDrawFilled(true)
         dataSet.fillAlpha = 80
         dataSet.lineWidth = 2f
-        dataSet.valueTextColor = Color.parseColor("#6C7BFF")
-        dataSet.valueTextSize = 12f
+        dataSet.setDrawValues(false)
 
         val data = RadarData(dataSet)
         radarChart.data = data
@@ -302,5 +409,4 @@ val recentOnly=interviewList.take(5)
             problemSolving
         )
     }
-
-    }
+}

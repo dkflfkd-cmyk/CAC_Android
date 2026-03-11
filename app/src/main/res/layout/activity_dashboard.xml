@@ -122,7 +122,7 @@
                             android:gravity="center">
 
                             <TextView
-                                android:id="@+id/txtAvgScore"
+                                android:id="@+id/txtAvgDocumentScore"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="75"
@@ -176,7 +176,7 @@
                             android:gravity="center">
 
                             <TextView
-                                android:id="@+id/txtMaxScore"
+                                android:id="@+id/txtAvgInterviewScore"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="82"
@@ -231,12 +231,11 @@
                         android:textColor="#777777"
                         android:layout_marginTop="4dp" />
 
-                    <View
-                        android:id="@+id/chartLinePlaceholder"
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/lineChart"
                         android:layout_width="match_parent"
-                        android:layout_height="120dp"
-                        android:layout_marginTop="12dp"
-                        android:background="#F2F2F2" />
+                        android:layout_height="220dp"
+                        android:layout_marginTop="12dp" />
 
                     <!-- 작은 통계 3개 -->
                     <LinearLayout
@@ -262,7 +261,7 @@
                                 android:gravity="center">
 
                                 <TextView
-                                    android:id="@+id/txtPlusScore"
+                                    android:id="@+id/txtScoreImprovement"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="+13"
@@ -301,7 +300,7 @@
                                 android:gravity="center">
 
                                 <TextView
-                                    android:id="@+id/txtTotalRound"
+                                    android:id="@+id/txtTotalCount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="5회"

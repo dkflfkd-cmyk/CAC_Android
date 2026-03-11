@@ -58,7 +58,32 @@ class cardResumeActivity : AppCompatActivity() {
     private lateinit var strengthList: LinearLayout
     private lateinit var improveList: LinearLayout
 
+    private lateinit var cardRadar: View
+    private lateinit var cardCompetency: View
+    private lateinit var competencyList: LinearLayout
+    private lateinit var radarChart: com.github.mikephil.charting.charts.RadarChart
     private lateinit var txtResult: TextView
+
+    private lateinit var txtResumeOnlyScore: TextView
+    private lateinit var txtResumeComment: TextView
+    private lateinit var txtResumeSummary: TextView
+
+    private lateinit var chipGroupMissing: ChipGroup
+    private lateinit var qualificationList: LinearLayout
+
+    private lateinit var cardResumeScore: View
+    private lateinit var cardMissing: View
+    private lateinit var cardQualification: View
+
+    private lateinit var cardCoverScore: View
+    private lateinit var cardCoverFeedback: View
+    private lateinit var cardRewrite: View
+
+    private lateinit var txtCoverOnlyScore: TextView
+    private lateinit var txtCoverComment: TextView
+
+    private lateinit var coverFeedbackList: LinearLayout
+    private lateinit var rewriteList: LinearLayout
 
     private val pickFileLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -94,6 +119,41 @@ class cardResumeActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
         }
+
+
+        //종합
+        cardRadar = findViewById(R.id.cardRadar)
+        cardCompetency = findViewById(R.id.cardCompetency)
+        competencyList = findViewById(R.id.competencyList)
+        radarChart = findViewById(R.id.radarChart)
+
+
+
+
+
+        cardCoverScore = findViewById(R.id.cardCoverScore)
+        cardCoverFeedback = findViewById(R.id.cardCoverFeedback)
+        cardRewrite = findViewById(R.id.cardRewrite)
+
+        txtCoverOnlyScore = findViewById(R.id.txtCoverOnlyScore)
+        txtCoverComment = findViewById(R.id.txtCoverComment)
+
+        coverFeedbackList = findViewById(R.id.coverFeedbackList)
+        rewriteList = findViewById(R.id.rewriteList)
+
+
+        cardResumeScore = findViewById(R.id.cardResumeScore)
+        cardMissing = findViewById(R.id.cardMissing)
+        cardQualification = findViewById(R.id.cardQualification)
+
+//이력서 결과
+        txtResumeOnlyScore = findViewById(R.id.txtResumeOnlyScore)
+        txtResumeComment = findViewById(R.id.txtResumeComment)
+        txtResumeSummary = findViewById(R.id.txtResumeSummary)
+
+        chipGroupMissing = findViewById(R.id.chipGroupMissing)
+        qualificationList = findViewById(R.id.qualificationList)
+
 
         val title = findViewById<TextView>(R.id.txtTitle)
         val text = "Career AI Coach"
@@ -225,6 +285,33 @@ class cardResumeActivity : AppCompatActivity() {
         improveList.removeAllViews()
         txtScore.text = ""
 
+
+        competencyList.removeAllViews()
+        cardRadar.visibility = View.GONE
+        cardCompetency.visibility = View.GONE
+
+
+        coverFeedbackList.removeAllViews()
+        rewriteList.removeAllViews()
+
+        txtCoverOnlyScore.text = ""
+        txtCoverComment.text = ""
+
+        cardCoverScore.visibility = View.GONE
+        cardCoverFeedback.visibility = View.GONE
+        cardRewrite.visibility = View.GONE
+
+        chipGroupMissing.removeAllViews()
+        qualificationList.removeAllViews()
+
+        txtResumeOnlyScore.text = ""
+        txtResumeComment.text = ""
+        txtResumeSummary.text = ""
+
+        cardResumeScore.visibility = View.GONE
+        cardMissing.visibility = View.GONE
+        cardQualification.visibility = View.GONE
+
     }
 
     private fun showEmptyState() {
@@ -266,7 +353,7 @@ class cardResumeActivity : AppCompatActivity() {
         val bearer = "Bearer $token"
         Log.d("ANALYZE", "calling analyze API with bearer exists=${bearer.isNotBlank()}")
 
-        RetrofitClient.api.analyzeResumeById(bearer, resumeId.toString())
+        RetrofitClient.api.analyzeResumeById(bearer, resumeId)
             .enqueue(object : Callback<Map<String, Any>> {
                 override fun onResponse(
                     call: Call<Map<String, Any>>,
@@ -376,6 +463,120 @@ class cardResumeActivity : AppCompatActivity() {
             val resultObj = root.optJSONObject("result")
             val resumeObj = resultObj?.optJSONObject("resume")
 
+//종합
+            val jobFit = resultObj?.optJSONObject("score_breakdown")?.optInt("job_fit", 0) ?: 0
+            val specificity = resultObj?.optJSONObject("score_breakdown")?.optInt("specificity", 0) ?: 0
+            val growthPotential = resultObj?.optJSONObject("score_breakdown")?.optInt("growth_potential", 0) ?: 0
+            val persuasiveness = resultObj?.optJSONObject("score_breakdown")?.optInt("cover_persuasiveness", 0) ?: 0
+            val completeness = resultObj?.optJSONObject("score_breakdown")?.optInt("completeness", 0) ?: 0
+
+
+// 자소서
+            val coverObj = resultObj?.optJSONObject("cover_letter")
+
+            val coverScore = coverObj?.optInt("score", 0) ?: 0
+
+            val motivationList = coverObj?.optJSONArray("motivation_feedback")?.let { arr ->
+                List(arr.length()) { i -> arr.optString(i) }.filter { it.isNotBlank() }
+            } ?: emptyList()
+
+            val experienceList = coverObj?.optJSONArray("experience_feedback")?.let { arr ->
+                List(arr.length()) { i -> arr.optString(i) }.filter { it.isNotBlank() }
+            } ?: emptyList()
+
+            val collaborationList = coverObj?.optJSONArray("collaboration_feedback")?.let { arr ->
+                List(arr.length()) { i -> arr.optString(i) }.filter { it.isNotBlank() }
+            } ?: emptyList()
+
+            val aspirationList = coverObj?.optJSONArray("aspiration_feedback")?.let { arr ->
+                List(arr.length()) { i -> arr.optString(i) }.filter { it.isNotBlank() }
+            } ?: emptyList()
+
+            val rewriteArr = coverObj?.optJSONArray("rewrite_suggestions")
+
+            val coverFeedbackCards = mutableListOf<Pair<String, String>>()
+
+            if (motivationList.isNotEmpty()) {
+                coverFeedbackCards.add(
+                    "지원 동기" to motivationList.joinToString("\n\n")
+                )
+            }
+
+            if (experienceList.isNotEmpty()) {
+                coverFeedbackCards.add(
+                    "경험 서술" to experienceList.joinToString("\n\n")
+                )
+            }
+
+            if (collaborationList.isNotEmpty()) {
+                coverFeedbackCards.add(
+                    "협업 경험" to collaborationList.joinToString("\n\n")
+                )
+            }
+
+            if (aspirationList.isNotEmpty()) {
+                coverFeedbackCards.add(
+                    "입사 후 포부" to aspirationList.joinToString("\n\n")
+                )
+            }
+
+            val rewriteCardItems = mutableListOf<Triple<String, String, String>>()
+            if (rewriteArr != null) {
+                for (i in 0 until rewriteArr.length()) {
+                    val obj = rewriteArr.optJSONObject(i) ?: continue
+                    val before = obj.optString("before")
+                    val after = obj.optString("after")
+                    val reason = obj.optString("reason")
+                    rewriteCardItems.add(Triple(before, after, reason))
+                }
+            }
+
+            txtCoverOnlyScore.text = coverScore.toString()
+
+            txtCoverComment.text = when {
+                coverScore >= 85 -> "전반적으로 우수한 자기소개서입니다."
+                coverScore >= 70 -> "전반적으로 양호한 자기소개서입니다."
+                else -> "보완이 필요한 자기소개서입니다."
+            }
+
+
+
+
+
+            //이력서 결과
+            val hasResume = resultObj?.optBoolean("has_resume", false) ?: false
+            val hasCoverLetter = resultObj?.optBoolean("has_cover_letter", false) ?: false
+
+            //확인
+            Log.d("CHECK_DOC_TYPE", "hasResume=$hasResume, hasCoverLetter=$hasCoverLetter")
+
+            val resumeScore = resumeObj?.optInt("score", 0) ?: 0
+            val resumeSummaryText = resumeObj?.optString("summary").orEmpty()
+
+            val missingSkillsArr = resumeObj?.optJSONArray("missing_skills")
+            val qualificationArr = resumeObj?.optJSONArray("recommended_qualifications")
+
+            val missingList = missingSkillsArr?.let { arr ->
+                List(arr.length()) { i -> arr.optString(i) }.filter { it.isNotBlank() }
+            } ?: emptyList()
+
+
+            txtResumeOnlyScore.text = resumeScore.toString()
+
+            txtResumeComment.text = when {
+                resumeScore >= 85 -> "전반적으로 우수한 이력서입니다."
+                resumeScore >= 70 -> "전반적으로 양호한 이력서입니다."
+                else -> "보완이 필요한 이력서입니다."
+            }
+
+            txtResumeSummary.visibility= View.GONE
+
+            val qualificationItems = qualificationArr?.let { arr ->
+                List(arr.length()) { i ->
+                    val obj = arr.optJSONObject(i)
+                    obj?.optString("name").orEmpty()
+                }.filter { it.isNotBlank() }
+            } ?: emptyList()
 
             //역량 점수
             val competencyObj = resultObj?.optJSONObject("competency_scores")
@@ -425,7 +626,6 @@ class cardResumeActivity : AppCompatActivity() {
 
             val strengthsArr = resumeObj?.optJSONArray("strengths")
 
-            val missingSkillsArr = resumeObj?.optJSONArray("missing_skills")
             val skillRecArr = resumeObj?.optJSONArray("skill_recommendations")
 
             val extractedList = extractedSkillsArr?.let { arr ->
@@ -457,18 +657,70 @@ class cardResumeActivity : AppCompatActivity() {
                 else -> emptyList()
             }
 
+            //차트/카드 채우기(종합)
+            setupRadarChart(jobFit, specificity, growthPotential, persuasiveness, completeness)
+
+            competencyList.removeAllViews()
+
+            addCompetencyScoreCard(
+                competencyList,
+                "기술 역량",
+                technicalScore,
+                competencyObj?.optJSONObject("technical")?.optString("reason").orEmpty(),
+                competencyObj?.optJSONObject("technical")?.optString("improvement").orEmpty()
+            )
+
+            addCompetencyScoreCard(
+                competencyList,
+                "열정",
+                passionScore,
+                competencyObj?.optJSONObject("passion")?.optString("reason").orEmpty(),
+                competencyObj?.optJSONObject("passion")?.optString("improvement").orEmpty()
+            )
+
+            addCompetencyScoreCard(
+                competencyList,
+                "커뮤니케이션",
+                communicationScore,
+                competencyObj?.optJSONObject("communication")?.optString("reason").orEmpty(),
+                competencyObj?.optJSONObject("communication")?.optString("improvement").orEmpty()
+            )
+
+            addCompetencyScoreCard(
+                competencyList,
+                "협업 능력",
+                collaborationScore,
+                competencyObj?.optJSONObject("collaboration")?.optString("reason").orEmpty(),
+                competencyObj?.optJSONObject("collaboration")?.optString("improvement").orEmpty()
+            )
+
+            addCompetencyScoreCard(
+                competencyList,
+                "문제 해결 능력",
+                problemSolvingScore,
+                competencyObj?.optJSONObject("problem_solving")?.optString("reason").orEmpty(),
+                competencyObj?.optJSONObject("problem_solving")?.optString("improvement").orEmpty()
+            )
+
             //  UI 적용
             resultSection.visibility = View.VISIBLE
 
+            findViewById<View>(R.id.cardScore).visibility = View.VISIBLE
+            cardRadar.visibility = View.VISIBLE
+            cardCompetency.visibility = View.VISIBLE
+
+            cardResumeScore.visibility = if (hasResume) View.VISIBLE else View.GONE
+            findViewById<View>(R.id.cardExtracted).visibility = if (hasResume) View.VISIBLE else View.GONE
+            findViewById<View>(R.id.cardRequired).visibility = if (hasResume) View.VISIBLE else View.GONE
+            findViewById<View>(R.id.cardStrength).visibility = if (hasResume) View.VISIBLE else View.GONE
+            findViewById<View>(R.id.cardImprove).visibility = if (hasResume) View.VISIBLE else View.GONE
+            cardMissing.visibility = if (hasResume) View.VISIBLE else View.GONE
+            cardQualification.visibility = if (hasResume) View.VISIBLE else View.GONE
+
+
             txtScore.text = if (totalScore >= 0) totalScore.toString() else "-"
 
-            // 상위%가 서버에 없어서 대신 세부 점수 요약 문구로
-            val breakdown = resultObj?.optJSONObject("score_breakdown")
-            val jobFit = breakdown?.optInt("job_fit", -1) ?: -1
-            val completeness = breakdown?.optInt("completeness", -1) ?: -1
 
-                if (jobFit >= 0 && completeness >= 0) "직무적합 ${jobFit} · 완성도 ${completeness}"
-                else ""
 
             addChips(
                 chipGroupExtracted,
@@ -494,6 +746,33 @@ class cardResumeActivity : AppCompatActivity() {
                 isBlue = true
             )
 
+            addChips(
+                chipGroupMissing,
+                if (missingList.isNotEmpty()) missingList else listOf("부족한 역량 없음"),
+                isBlue = true
+            )
+
+            addSimpleItems(
+                qualificationList,
+                if (qualificationItems.isNotEmpty()) qualificationItems else listOf("추천 자격증 없음")
+            )
+
+            addCoverFeedbackCards(
+                coverFeedbackList,
+                if (coverFeedbackCards.isNotEmpty()) coverFeedbackCards
+                else listOf("자소서 피드백" to "피드백 없음")
+            )
+
+            addRewriteCards(
+                rewriteList,
+                rewriteCardItems
+            )
+
+
+            cardCoverScore.visibility = if (hasCoverLetter) View.VISIBLE else View.GONE
+            cardCoverFeedback.visibility = if (hasCoverLetter) View.VISIBLE else View.GONE
+            cardRewrite.visibility = if (hasCoverLetter) View.VISIBLE else View.GONE
+
 
             // 버튼 텍스트 복구(넣어둔 경우)
             try {
@@ -509,6 +788,44 @@ class cardResumeActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.d("RESULT_PARSE", "parse fail: ${e.message}")
             false
+        }
+    }
+
+    private fun addSimpleItems(parent: LinearLayout, items: List<String>) {
+        parent.removeAllViews()
+
+        for ((i, text) in items.withIndex()) {
+            val card = com.google.android.material.card.MaterialCardView(this)
+            card.radius = 12f
+            card.strokeWidth=0
+            card.cardElevation = 0f
+            card.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
+
+            val row = LinearLayout(this)
+            row.orientation = LinearLayout.HORIZONTAL
+            row.setPadding(18, 14, 18, 14)
+
+            val num = TextView(this)
+            num.text = "${i + 1}"
+            num.textSize = 16f
+            num.setTextColor(Color.parseColor("#111111"))
+            num.setPadding(0, 0, 14, 0)
+
+            val tv = TextView(this)
+            tv.text = text
+            tv.textSize = 14f
+            tv.setTextColor(Color.parseColor("#111111"))
+
+            row.addView(num)
+            row.addView(tv)
+            card.addView(row)
+
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = 10
+            parent.addView(card, lp)
         }
     }
 
@@ -559,6 +876,7 @@ class cardResumeActivity : AppCompatActivity() {
         for ((i, text) in items.withIndex()) {
             val card = com.google.android.material.card.MaterialCardView(this)
             card.radius = 12f
+            card.strokeWidth=0
             card.cardElevation = 0f
             card.setCardBackgroundColor(Color.parseColor(if (isBlue) "#3950E7" else "#F2F2F2"))
 
@@ -629,6 +947,320 @@ class cardResumeActivity : AppCompatActivity() {
             .putInt("score_collaboration", collaboration)
             .putInt("score_problem_solving", problemSolving)
             .apply()
+    }
+
+
+
+    private fun addCoverFeedbackCards(
+        parent: LinearLayout,
+        items: List<Pair<String, String>>
+    ) {
+        parent.removeAllViews()
+
+        for ((title, content) in items) {
+            val outerCard = com.google.android.material.card.MaterialCardView(this)
+            outerCard.radius = 18f
+            outerCard.cardElevation = 0f
+            outerCard.strokeWidth = 0
+            outerCard.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
+
+            val container = LinearLayout(this)
+            container.orientation = LinearLayout.VERTICAL
+            container.setPadding(24, 24, 24, 24)
+
+            val titleView = TextView(this)
+            titleView.text = title
+            titleView.textSize = 18f
+            titleView.setTextColor(Color.parseColor("#333333"))
+            titleView.setTypeface(null, android.graphics.Typeface.BOLD)
+
+            val descCard = com.google.android.material.card.MaterialCardView(this)
+            descCard.radius = 14f
+            descCard.cardElevation = 0f
+            descCard.strokeWidth = 0
+            descCard.setCardBackgroundColor(Color.WHITE)
+
+            val descText = TextView(this)
+            descText.text = content
+            descText.textSize = 15f
+            descText.setTextColor(Color.parseColor("#333333"))
+            descText.setLineSpacing(8f, 1.1f)
+            descText.setPadding(22, 22, 22, 22)
+
+            descCard.addView(descText)
+
+            val descParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            descParams.topMargin = 18
+            descCard.layoutParams = descParams
+
+            container.addView(titleView)
+            container.addView(descCard)
+
+            outerCard.addView(container)
+
+            val outerParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            outerParams.topMargin = 16
+            parent.addView(outerCard, outerParams)
+        }
+    }
+
+    private fun addRewriteCards(
+        parent: LinearLayout,
+        items: List<Triple<String, String, String>>
+    ) {
+        parent.removeAllViews()
+
+        for ((before, after, reason) in items) {
+            val outerCard = com.google.android.material.card.MaterialCardView(this)
+            outerCard.radius = 18f
+            outerCard.cardElevation = 0f
+            outerCard.strokeWidth = 0
+            outerCard.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
+
+            val container = LinearLayout(this)
+            container.orientation = LinearLayout.VERTICAL
+            container.setPadding(24, 24, 24, 24)
+
+            val beforeCard = com.google.android.material.card.MaterialCardView(this)
+            beforeCard.radius = 14f
+            beforeCard.cardElevation = 0f
+            beforeCard.strokeWidth = 0
+            beforeCard.setCardBackgroundColor(Color.WHITE)
+
+            val beforeText = TextView(this)
+            beforeText.text = "Before\n\n$before"
+            beforeText.textSize = 15f
+            beforeText.setTextColor(Color.parseColor("#333333"))
+            beforeText.setLineSpacing(8f, 1.1f)
+            beforeText.setPadding(30, 26, 30, 32)
+            beforeCard.addView(beforeText)
+
+            val arrowText = TextView(this)
+            arrowText.text = "↓"
+            arrowText.textSize = 34f
+            arrowText.setTextColor(Color.parseColor("#111111"))
+            arrowText.gravity = android.view.Gravity.CENTER
+
+            val arrowParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            arrowParams.topMargin = 18
+            arrowParams.bottomMargin = 18
+            arrowText.layoutParams = arrowParams
+
+            val afterCard = com.google.android.material.card.MaterialCardView(this)
+            afterCard.radius = 14f
+            afterCard.cardElevation = 0f
+            afterCard.strokeWidth = 0
+            afterCard.setCardBackgroundColor(Color.parseColor("#4A5BFF"))
+
+            val afterText = TextView(this)
+            afterText.text = "After\n\n$after"
+            afterText.textSize = 15f
+            afterText.setTextColor(Color.WHITE)
+            afterText.setLineSpacing(8f, 1.1f)
+            afterText.setPadding(30, 26, 30, 32)
+            afterCard.addView(afterText)
+
+            val reasonText = TextView(this)
+            reasonText.text = reason
+            reasonText.textSize = 14f
+            reasonText.setTextColor(Color.parseColor("#666666"))
+            reasonText.gravity = android.view.Gravity.CENTER
+            reasonText.setLineSpacing(6f, 1.1f)
+            reasonText.setPadding(20, 28, 20, 16)
+
+            container.addView(beforeCard)
+            container.addView(arrowText)
+            container.addView(afterCard)
+            container.addView(reasonText)
+
+            outerCard.addView(container)
+
+            val outerParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            outerParams.topMargin = 16
+            parent.addView(outerCard, outerParams)
+        }
+    }
+
+    private fun setupRadarChart(
+        jobFit: Int,
+        specificity: Int,
+        growthPotential: Int,
+        persuasiveness: Int,
+        completeness: Int
+    ) {
+        val entries = listOf(
+            com.github.mikephil.charting.data.RadarEntry(jobFit.toFloat()),
+            com.github.mikephil.charting.data.RadarEntry(specificity.toFloat()),
+            com.github.mikephil.charting.data.RadarEntry(growthPotential.toFloat()),
+            com.github.mikephil.charting.data.RadarEntry(persuasiveness.toFloat()),
+            com.github.mikephil.charting.data.RadarEntry(completeness.toFloat())
+        )
+
+        val dataSet = com.github.mikephil.charting.data.RadarDataSet(entries, "")
+        dataSet.color = Color.parseColor("#4A5BFF")
+        dataSet.fillColor = Color.parseColor("#4A5BFF")
+        dataSet.setDrawFilled(true)
+        dataSet.fillAlpha = 90
+        dataSet.lineWidth = 2f
+
+        val data = com.github.mikephil.charting.data.RadarData(dataSet)
+        data.setDrawValues(false)
+
+        radarChart.data = data
+        radarChart.description.isEnabled = false
+        radarChart.legend.isEnabled = false
+        radarChart.webLineWidth = 1f
+        radarChart.webColor = Color.parseColor("#BDBDBD")
+        radarChart.webLineWidthInner = 1f
+        radarChart.webColorInner = Color.parseColor("#D9D9D9")
+        radarChart.yAxis.axisMinimum = 0f
+        radarChart.yAxis.axisMaximum = 100f
+        radarChart.yAxis.labelCount = 5
+        radarChart.yAxis.textColor = Color.parseColor("#999999")
+
+        val labels = listOf("직무 적합도", "구체성", "성장 가능성", "설득력", "내용 완성도")
+        radarChart.xAxis.valueFormatter =
+            com.github.mikephil.charting.formatter.IndexAxisValueFormatter(labels)
+        radarChart.xAxis.textSize = 12f
+        radarChart.xAxis.textColor = Color.parseColor("#333333")
+
+        radarChart.invalidate()
+    }
+
+    private fun addCompetencyScoreCard(
+        parent: LinearLayout,
+        title: String,
+        score: Int,
+        reason: String,
+        improvement: String
+    ) {
+        val outerCard = com.google.android.material.card.MaterialCardView(this)
+        outerCard.radius = 18f
+        outerCard.cardElevation = 0f
+        outerCard.strokeWidth = 0
+        outerCard.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
+
+        val container = LinearLayout(this)
+        container.orientation = LinearLayout.VERTICAL
+        container.setPadding(24, 24, 24, 24)
+
+        val topRow = LinearLayout(this)
+        topRow.orientation = LinearLayout.HORIZONTAL
+
+        val titleView = TextView(this)
+        titleView.text = title
+        titleView.textSize = 18f
+        titleView.setTextColor(Color.parseColor("#333333"))
+        titleView.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+
+        val scoreView = TextView(this)
+        scoreView.text = "$score"
+        scoreView.textSize = 22f
+        scoreView.setTextColor(Color.parseColor("#4A5BFF"))
+        scoreView.setTypeface(null, android.graphics.Typeface.BOLD)
+
+        val suffixView = TextView(this)
+        suffixView.text = "/100"
+        suffixView.textSize = 14f
+        suffixView.setTextColor(Color.parseColor("#999999"))
+        suffixView.setPadding(6, 8, 0, 0)
+
+        topRow.addView(titleView)
+        topRow.addView(scoreView)
+        topRow.addView(suffixView)
+
+        val progressBg = View(this)
+        progressBg.setBackgroundColor(Color.parseColor("#D9D9D9"))
+
+        val progressWrap = android.widget.FrameLayout(this)
+        val progressParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            14
+        )
+        progressParams.topMargin = 14
+        progressWrap.layoutParams = progressParams
+
+        val bgParams = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            14
+        )
+        progressBg.layoutParams = bgParams
+        progressWrap.addView(progressBg)
+
+        val progressFill = View(this)
+        progressFill.setBackgroundColor(Color.parseColor("#4A5BFF"))
+        val fillParams = android.widget.FrameLayout.LayoutParams(
+            (score * 6),
+            14
+        )
+        progressFill.layoutParams = fillParams
+        progressWrap.addView(progressFill)
+
+        val reasonCard = com.google.android.material.card.MaterialCardView(this)
+        reasonCard.radius = 14f
+        reasonCard.cardElevation = 0f
+        reasonCard.strokeWidth = 0
+        reasonCard.setCardBackgroundColor(Color.WHITE)
+
+        val reasonText = TextView(this)
+        reasonText.text = reason
+        reasonText.textSize = 15f
+        reasonText.setTextColor(Color.parseColor("#333333"))
+        reasonText.setPadding(22, 22, 22, 22)
+        reasonCard.addView(reasonText)
+
+        val reasonParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        reasonParams.topMargin = 22
+        reasonCard.layoutParams = reasonParams
+
+        val improvementCard = com.google.android.material.card.MaterialCardView(this)
+        improvementCard.radius = 14f
+        improvementCard.cardElevation = 0f
+        improvementCard.strokeWidth = 0
+        improvementCard.setCardBackgroundColor(Color.WHITE)
+
+        val improvementText = TextView(this)
+        improvementText.text = improvement
+        improvementText.textSize = 15f
+        improvementText.setTextColor(Color.parseColor("#333333"))
+        improvementText.setPadding(22, 22, 22, 22)
+        improvementCard.addView(improvementText)
+
+        val improvementParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        improvementParams.topMargin = 14
+        improvementCard.layoutParams = improvementParams
+
+        container.addView(topRow)
+        container.addView(progressWrap)
+        container.addView(reasonCard)
+        container.addView(improvementCard)
+
+        outerCard.addView(container)
+
+        val outerParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        outerParams.topMargin = 16
+        parent.addView(outerCard, outerParams)
     }
 
 }

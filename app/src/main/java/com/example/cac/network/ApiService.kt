@@ -43,13 +43,19 @@ interface ApiService {
     @POST("/resumes/{resume_id}/analyze")
     fun analyzeResumeById(
         @Header("Authorization") bearerToken: String,
-        @Path("resume_id") resumeId: String
+        @Path("resume_id") resumeId: Int
     ): Call<Map<String, Any>>
 
     @GET("/resumes/{resume_id}/analysis/public")
     fun getAnalysisPublic(
         @Path("resume_id") resumeId: Int
     ): Call<okhttp3.ResponseBody>
+
+//대시보드
+    @GET("/users/me/dashboard")
+    fun getDashboard(
+        @Header("Authorization") token: String
+    ): Call<DashboardResponse>
 
     // (선택) 면접 – 지금은 안 써도 됨
 
