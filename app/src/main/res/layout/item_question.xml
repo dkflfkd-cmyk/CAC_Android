@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="3dp"
+    app:strokeWidth="1.2dp"
+    app:strokeColor="#8897FD"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardUseCompatPadding="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:id="@+id/txtQuestionNumber"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:gravity="center"
+            android:text="1"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_circle_blue" />
+
+        <TextView
+            android:id="@+id/txtQuestionText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:text="사용자 경험을 개선한 프로젝트 사례를 설명해주세요."
+            android:textColor="#333333"
+            android:textSize="13sp"
+            android:lineSpacingExtra="3dp" />
+
+        <ImageButton
+            android:id="@+id/btnStartQuestion"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_play_arrow"
+            app:tint="#111111" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

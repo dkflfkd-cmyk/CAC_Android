@@ -17,8 +17,11 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-
-
+//데모로그인용--------------------------
+//        Session.accessToken = "demo-token"
+//        startActivity(Intent(this, MainActivity::class.java))
+//        finish()
+//----------------------------------
         val savedToken = SessionManager.getToken(this)
         if (!savedToken.isNullOrBlank()) {
             Session.accessToken = savedToken

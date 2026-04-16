@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.INTERNET"/>
 
-
-
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
-        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -15,33 +13,54 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Cac">
+        android:theme="@style/Theme.Cac"
+        android:usesCleartextTraffic="true">
+
+
+
+        <activity android:name=".QuestionSetupActivity"
+            android:exported="false"/>
+
+        <activity android:name="InterviewStartActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".QuestionListActivity"
+            android:exported="false"
+            android:label="@string/title_activity_question_list"
+            android:theme="@style/Theme.Cac" />
 
 
         <activity
             android:name=".LoginActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
-        <activity android:name=".SignupStep1Activity" android:exported="false"/>
-        <activity android:name=".SignupStep2Activity" android:exported="false"/>
+        <activity
+            android:name=".InterviewChatActivity"
+            android:exported="false" />
 
+        <activity
+            android:name=".SignupStep1Activity"
+            android:exported="false" />
+        <activity
+            android:name=".SignupStep2Activity"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
         <activity
             android:name=".cardRoadmapActivity"
             android:exported="false" />
         <activity
             android:name=".cardResumeActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
         <activity
             android:name=".InterviewActivity"
             android:exported="false" />
@@ -51,11 +70,9 @@
         <activity
             android:name=".MYActivity"
             android:exported="false" />
-
-        <activity android:name=".RoadmapActivity"
+        <activity
+            android:name=".RoadmapActivity"
             android:exported="false" />
-
-
-          </application>
+    </application>
 
 </manifest>

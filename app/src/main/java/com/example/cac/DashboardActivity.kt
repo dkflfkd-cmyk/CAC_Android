@@ -90,13 +90,15 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
         }
 
+        findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
+            startActivity(Intent(this, DashboardActivity::class.java))
+        }
+
         findViewById<TextView>(R.id.btnRoadmap).setOnClickListener {
             startActivity(Intent(this, RoadmapActivity::class.java))
         }
 
-        findViewById<TextView>(R.id.btnNoticev2).setOnClickListener {
-            startActivity(Intent(this, MYActivity::class.java))
-        }
+
     }
 
     private fun setupRecentInterview() {

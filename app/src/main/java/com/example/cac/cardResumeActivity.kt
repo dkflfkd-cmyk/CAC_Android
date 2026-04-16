@@ -35,8 +35,10 @@ import retrofit2.Callback
 import retrofit2.Response
 import android.content.Context
 import org.json.JSONArray
-
+import android.view.Gravity
+import androidx.core.content.res.ResourcesCompat
 class cardResumeActivity : AppCompatActivity() {
+    private fun appFont(fontRes: Int) = ResourcesCompat.getFont(this, fontRes)
     private lateinit var txtAnalyze: TextView
     private var pollingTry = 0
     private val pollingMax = 20
@@ -97,6 +99,23 @@ class cardResumeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_card_resume)
+
+
+        //양식버튼 클릭
+
+        val btnFormDownload = findViewById<android.view.View>(R.id.btnformdownload)
+
+
+        btnFormDownload.setOnClickListener {
+
+            val url = "http://54.180.123.65:8000/static/index.html"
+
+            // 인터넷 브라우저 열기
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            startActivity(intent)
+        }
+
+
 
 
         //버튼 클릭시
@@ -444,13 +463,42 @@ class cardResumeActivity : AppCompatActivity() {
         btnAnalyzeCircle.isEnabled = true
     }
 
-    private fun addChips(group: com.google.android.material.chip.ChipGroup, items: List<String>, isBlue: Boolean) {
+    private fun addChips(
+        group: ChipGroup,
+        items: List<String>,
+        colorCode: String
+    ) {
         group.removeAllViews()
-        val layout = if (isBlue) R.layout.chip_item_blue else R.layout.chip_item_black
+
+        fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
         for (t in items) {
-            val chip = layoutInflater.inflate(layout, group, false) as com.google.android.material.chip.Chip
-            chip.text = t
+
+            val chip = com.google.android.material.chip.Chip(this).apply {
+                text = t
+                typeface = appFont(R.font.pretendard_light)
+                textSize = 13f
+                chipMinHeight = dpToPx(42).toFloat()
+                setEnsureMinTouchTargetSize(false)
+
+                chipCornerRadius = dpToPx(10).toFloat() // 라운드 조절
+                chipStrokeWidth = 0f
+                chipStartPadding = dpToPx(12).toFloat()
+                chipEndPadding = dpToPx(12).toFloat()
+
+
+                chipBackgroundColor = android.content.res.ColorStateList.valueOf(Color.parseColor(colorCode))
+                setTextColor(Color.WHITE) // 글씨는 모두 흰색
+            }
+
+            val lp = ChipGroup.LayoutParams(
+                ChipGroup.LayoutParams.WRAP_CONTENT,
+                ChipGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.marginEnd = dpToPx(1)
+            lp.bottomMargin = dpToPx(8) // 행 간격 조절
+            chip.layoutParams = lp
+
             group.addView(chip)
         }
     }
@@ -721,18 +769,40 @@ class cardResumeActivity : AppCompatActivity() {
             txtScore.text = if (totalScore >= 0) totalScore.toString() else "-"
 
 
-
+            // 1. 추출된 스킬 및 역량 (진한 파랑)
             addChips(
                 chipGroupExtracted,
                 if (extractedList.isNotEmpty()) extractedList else listOf("스킬 없음"),
-                isBlue = true
+                "#3950E7"
             )
+
+// 2. 희망 직무 요구 역량 (검정)
 
             addChips(
                 chipGroupRequired,
                 if (targetList.isNotEmpty()) targetList else listOf("역량 없음"),
-                isBlue = false
+                "#222222"
             )
+
+// 3. 부족한 역량 (연한 파랑)
+            addChips(
+                chipGroupMissing,
+                if (missingList.isNotEmpty()) missingList else listOf("부족한 역량 없음"),
+                "#7D8DF3"
+            )
+
+
+//            addChips(
+//                chipGroupExtracted,
+//                if (extractedList.isNotEmpty()) extractedList else listOf("스킬 없음"),
+//                isBlue = true
+//            )
+//
+//            addChips(
+//                chipGroupRequired,
+//                if (targetList.isNotEmpty()) targetList else listOf("역량 없음"),
+//                isBlue = false
+//            )
 
             addNumberItems(
                 strengthList,
@@ -746,11 +816,6 @@ class cardResumeActivity : AppCompatActivity() {
                 isBlue = true
             )
 
-            addChips(
-                chipGroupMissing,
-                if (missingList.isNotEmpty()) missingList else listOf("부족한 역량 없음"),
-                isBlue = true
-            )
 
             addSimpleItems(
                 qualificationList,
@@ -793,39 +858,62 @@ class cardResumeActivity : AppCompatActivity() {
 
     private fun addSimpleItems(parent: LinearLayout, items: List<String>) {
         parent.removeAllViews()
+        fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
-        for ((i, text) in items.withIndex()) {
-            val card = com.google.android.material.card.MaterialCardView(this)
-            card.radius = 12f
-            card.strokeWidth=0
-            card.cardElevation = 0f
-            card.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
+        for ((idx, text) in items.withIndex()) {
 
-            val row = LinearLayout(this)
-            row.orientation = LinearLayout.HORIZONTAL
-            row.setPadding(18, 14, 18, 14)
+            val outerCard = com.google.android.material.card.MaterialCardView(this).apply {
+                radius = dpToPx(16).toFloat() // 모서리
+                cardElevation = 0f // 그림자
+                setCardBackgroundColor(Color.WHITE)
+                strokeColor = Color.parseColor("#E0E0E0") // 회색 테두리
+                strokeWidth = dpToPx(1) // 테두리 두께
+                useCompatPadding = true // 내부 여백 확보
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(1) // 카드 간의 간격
+                }
+            }
 
-            val num = TextView(this)
-            num.text = "${i + 1}"
-            num.textSize = 16f
-            num.setTextColor(Color.parseColor("#111111"))
-            num.setPadding(0, 0, 14, 0)
 
-            val tv = TextView(this)
-            tv.text = text
-            tv.textSize = 14f
-            tv.setTextColor(Color.parseColor("#111111"))
+            val container = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL // 숫자와 내용을 세로 중앙 정렬
+                setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
+            }
 
-            row.addView(num)
-            row.addView(tv)
-            card.addView(row)
+            //동그란 숫자 배경
+            val txtNum = TextView(this).apply {
+                this.text = "${idx + 1}"
+                textSize = 14f
+                setTextColor(Color.WHITE)
+                typeface = appFont(R.font.pretendard_bold)
+                gravity = Gravity.CENTER // 숫자를 중앙에
+                setBackgroundResource(R.drawable.bg_circle_black)
 
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = 10
-            parent.addView(card, lp)
+                layoutParams = LinearLayout.LayoutParams(dpToPx(28), dpToPx(28)).apply {
+                    marginEnd = dpToPx(16) // 숫자와 내용 사이의 간격
+                }
+            }
+
+            // 실제 내용 텍스트
+            val txtContent = TextView(this).apply {
+                this.text = text
+                textSize = 15f
+                setTextColor(Color.parseColor("#333333"))
+                typeface = appFont(R.font.pretendard_regular)
+                setLineSpacing(dpToPx(4).toFloat(), 1.1f) // 줄간격을 넓혀서 가독성 확보
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+
+            container.addView(txtNum)
+            container.addView(txtContent)
+            outerCard.addView(container)
+
+            parent.addView(outerCard)
         }
     }
 
@@ -833,17 +921,17 @@ class cardResumeActivity : AppCompatActivity() {
         resultSection.visibility = View.VISIBLE
         txtScore.text = "85"
 
-        addChips(
-            chipGroupExtracted,
-            listOf("React", "TypeScript", "Node.js", "Python", "Git/GitHub", "팀 협업"),
-            isBlue = true
-        )
-
-        addChips(
-            chipGroupRequired,
-            listOf("React", "TypeScript", "Node.js", "Python", "Git/GitHub", "팀 협업"),
-            isBlue = false
-        )
+//        addChips(
+//            chipGroupExtracted,
+//            listOf("React", "TypeScript", "Node.js", "Python", "Git/GitHub", "팀 협업"),
+//            isBlue = true
+//        )
+//
+//        addChips(
+//            chipGroupRequired,
+//            listOf("React", "TypeScript", "Node.js", "Python", "Git/GitHub", "팀 협업"),
+//            isBlue = false
+//        )
 
         addNumberItems(
             strengthList,
@@ -873,41 +961,70 @@ class cardResumeActivity : AppCompatActivity() {
 
     private fun addNumberItems(parent: LinearLayout, items: List<String>, isBlue: Boolean) {
         parent.removeAllViews()
-        for ((i, text) in items.withIndex()) {
-            val card = com.google.android.material.card.MaterialCardView(this)
-            card.radius = 12f
-            card.strokeWidth=0
-            card.cardElevation = 0f
-            card.setCardBackgroundColor(Color.parseColor(if (isBlue) "#3950E7" else "#F2F2F2"))
+        fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
-            val row = LinearLayout(this)
-            row.orientation = LinearLayout.HORIZONTAL
-            row.setPadding(18, 14, 18, 14)
+        for ((idx, text) in items.withIndex()) {
+            // 1. 최상위 카드 (회색 테두리 + 흰색 배경 + 둥근 모서리)
+            val outerCard = com.google.android.material.card.MaterialCardView(this).apply {
+                radius = dpToPx(16).toFloat() // 모서리를 둥글게
+                cardElevation = 0f // 그림자는 없이
+                setCardBackgroundColor(Color.WHITE)
+                strokeColor = Color.parseColor("#E0E0E0") // 회색 테두리
+                strokeWidth = dpToPx(1) // 테두리 두께
+                useCompatPadding = true // 내부 여백 확보
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(1) // 카드 간의 간격
+                }
+            }
 
-            val num = TextView(this)
-            num.text = "${i + 1}"
-            num.textSize = 16f
-            num.setTextColor(Color.parseColor(if (isBlue) "#FFFFFF" else "#111111"))
-            num.setPadding(0, 0, 14, 0)
+            // 안쪽 요소들을 묶어주는 컨테이너 (여백 넉넉하게)
+            val container = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL // 숫자와 내용을 세로 중앙 정렬
+                setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
+            }
 
-            val tv = TextView(this)
-            tv.text = text
-            tv.textSize = 15f
-            tv.setTextColor(Color.parseColor(if (isBlue) "#FFFFFF" else "#111111"))
+            // 2. 동그란 숫자 배경
+            val txtNum = TextView(this).apply {
+                this.text = "${idx + 1}"
+                textSize = 14f
+                setTextColor(Color.WHITE)
+                typeface = appFont(R.font.pretendard_bold)
+                gravity = Gravity.CENTER // 숫자를 중앙에
 
-            row.addView(num)
-            row.addView(tv)
-            card.addView(row)
+                // 파란색 또는 검은색 원형 배경 설정 (기존 isBlue 활용)
+                if (isBlue) {
+                    setBackgroundResource(R.drawable.bg_circle_blue)
+                } else {
+                    setBackgroundResource(R.drawable.bg_circle_black)
+                }
 
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = 10
-            parent.addView(card, lp)
+                layoutParams = LinearLayout.LayoutParams(dpToPx(28), dpToPx(28)).apply {
+                    marginEnd = dpToPx(16) // 숫자와 내용 사이의 간격
+                }
+            }
+
+            // 3. 실제 내용 텍스트
+            val txtContent = TextView(this).apply {
+                this.text = text
+                textSize = 15f
+                setTextColor(Color.parseColor("#333333"))
+                typeface = appFont(R.font.pretendard_regular)
+                setLineSpacing(dpToPx(4).toFloat(), 1.1f) // 줄간격을 넓혀서 가독성 확보
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            // 조립 (컨테이너에 넣고 카드에 담기)
+            container.addView(txtNum)
+            container.addView(txtContent)
+            outerCard.addView(container)
+
+            parent.addView(outerCard)
         }
     }
-
 
     private fun saveLearningTodo(items: List<String>) {
         val prefs = getSharedPreferences("cac_pref", Context.MODE_PRIVATE)
@@ -957,56 +1074,86 @@ class cardResumeActivity : AppCompatActivity() {
     ) {
         parent.removeAllViews()
 
+        // 화면 크기에 맞게 자동으로 여백/크기를 조절해주는 함수
+        fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
         for ((title, content) in items) {
-            val outerCard = com.google.android.material.card.MaterialCardView(this)
-            outerCard.radius = 18f
-            outerCard.cardElevation = 0f
-            outerCard.strokeWidth = 0
-            outerCard.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
+            //최상위 카드
+            val outerCard = com.google.android.material.card.MaterialCardView(this).apply {
+                radius = dpToPx(20).toFloat()
+                cardElevation = dpToPx(4).toFloat()
+                setCardBackgroundColor(Color.WHITE)
+                strokeWidth = 0
+                useCompatPadding = true // 그림자가 잘리지 않도록 여백 확보
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dpToPx(8)
+                }
+            }
 
-            val container = LinearLayout(this)
-            container.orientation = LinearLayout.VERTICAL
-            container.setPadding(24, 24, 24, 24)
+            // 안쪽 요소들을 묶어주는 넉넉한 여백의 컨테이너
+            val container = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24))
+            }
 
-            val titleView = TextView(this)
-            titleView.text = title
-            titleView.textSize = 18f
-            titleView.setTextColor(Color.parseColor("#333333"))
-            titleView.setTypeface(null, android.graphics.Typeface.BOLD)
+            // 항목 제목 ("지원 동기", "경험 서술" 등)
+            val titleText = TextView(this).apply {
+                text = title
+                textSize = 18f
+                setTextColor(Color.parseColor("#111111"))
+                typeface = appFont(R.font.pretendard_bold)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
 
-            val descCard = com.google.android.material.card.MaterialCardView(this)
-            descCard.radius = 14f
-            descCard.cardElevation = 0f
-            descCard.strokeWidth = 0
-            descCard.setCardBackgroundColor(Color.WHITE)
+            // 피드백 소제목 라벨
+            val feedbackLabel = TextView(this).apply {
+                text = "• AI 피드백"
+                textSize = 13f
+                setTextColor(Color.parseColor("#647AF6")) // 메인 블루 컬러
+                typeface = appFont(R.font.pretendard_bold)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dpToPx(20)
+                    bottomMargin = dpToPx(8)
+                }
+            }
 
-            val descText = TextView(this)
-            descText.text = content
-            descText.textSize = 15f
-            descText.setTextColor(Color.parseColor("#333333"))
-            descText.setLineSpacing(8f, 1.1f)
-            descText.setPadding(22, 22, 22, 22)
 
-            descCard.addView(descText)
+            val feedbackCard = com.google.android.material.card.MaterialCardView(this).apply {
+                radius = dpToPx(12).toFloat()
+                cardElevation = 0f
+                setCardBackgroundColor(Color.parseColor("#F0F4FF")) // 아주 연한 파란색 바탕
+                strokeWidth = 0
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            val feedbackTextContent = TextView(this).apply {
+                text = content
+                textSize = 14f
+                setTextColor(Color.parseColor("#333333"))
+                typeface = appFont(R.font.pretendard_regular)
+                setLineSpacing(dpToPx(6).toFloat(), 1.2f) // 줄간격을 넓혀서 가독성 확보
+                setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
+            }
+            feedbackCard.addView(feedbackTextContent)
 
-            val descParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            descParams.topMargin = 18
-            descCard.layoutParams = descParams
 
-            container.addView(titleView)
-            container.addView(descCard)
+            container.addView(titleText)
+            container.addView(feedbackLabel)
+            container.addView(feedbackCard)
 
             outerCard.addView(container)
-
-            val outerParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            outerParams.topMargin = 16
-            parent.addView(outerCard, outerParams)
+            parent.addView(outerCard)
         }
     }
 
@@ -1023,23 +1170,40 @@ class cardResumeActivity : AppCompatActivity() {
             outerCard.strokeWidth = 0
             outerCard.setCardBackgroundColor(Color.parseColor("#F2F2F2"))
 
+
+
+
             val container = LinearLayout(this)
             container.orientation = LinearLayout.VERTICAL
             container.setPadding(24, 24, 24, 24)
 
             val beforeCard = com.google.android.material.card.MaterialCardView(this)
-            beforeCard.radius = 14f
+            beforeCard.radius = 20f
             beforeCard.cardElevation = 0f
             beforeCard.strokeWidth = 0
             beforeCard.setCardBackgroundColor(Color.WHITE)
 
-            val beforeText = TextView(this)
-            beforeText.text = "Before\n\n$before"
-            beforeText.textSize = 15f
-            beforeText.setTextColor(Color.parseColor("#333333"))
-            beforeText.setLineSpacing(8f, 1.1f)
-            beforeText.setPadding(30, 26, 30, 32)
-            beforeCard.addView(beforeText)
+            val beforeWrap = LinearLayout(this)
+            beforeWrap.orientation = LinearLayout.VERTICAL
+            beforeWrap.setPadding(45, 30, 45, 38)
+
+            val beforeTitle = TextView(this)
+            beforeTitle.text = "Before"
+            beforeTitle.textSize = 15f
+            beforeTitle.setTextColor(Color.parseColor("#333333"))
+            beforeTitle.typeface = appFont(R.font.pretendard_bold)
+
+            val beforeContent = TextView(this)
+            beforeContent.text = before
+            beforeContent.textSize = 15f
+            beforeContent.setTextColor(Color.parseColor("#333333"))
+            beforeContent.setLineSpacing(8f, 1.1f)
+            beforeContent.setPadding(0, 8, 0, 0)
+            beforeContent.typeface = appFont(R.font.pretendard_light)
+
+            beforeWrap.addView(beforeTitle)
+            beforeWrap.addView(beforeContent)
+            beforeCard.addView(beforeWrap)
 
             val arrowText = TextView(this)
             arrowText.text = "↓"
@@ -1056,18 +1220,32 @@ class cardResumeActivity : AppCompatActivity() {
             arrowText.layoutParams = arrowParams
 
             val afterCard = com.google.android.material.card.MaterialCardView(this)
-            afterCard.radius = 14f
+            afterCard.radius = 20f
             afterCard.cardElevation = 0f
             afterCard.strokeWidth = 0
             afterCard.setCardBackgroundColor(Color.parseColor("#4A5BFF"))
 
-            val afterText = TextView(this)
-            afterText.text = "After\n\n$after"
-            afterText.textSize = 15f
-            afterText.setTextColor(Color.WHITE)
-            afterText.setLineSpacing(8f, 1.1f)
-            afterText.setPadding(30, 26, 30, 32)
-            afterCard.addView(afterText)
+            val afterWrap = LinearLayout(this)
+            afterWrap.orientation = LinearLayout.VERTICAL
+            afterWrap.setPadding(45, 30, 45, 38)
+
+            val afterTitle = TextView(this)
+            afterTitle.text = "After"
+            afterTitle.textSize = 15f
+            afterTitle.setTextColor(Color.WHITE)
+            afterTitle.typeface = appFont(R.font.pretendard_bold)
+
+            val afterContent = TextView(this)
+            afterContent.text = after
+            afterContent.textSize = 15f
+            afterContent.setTextColor(Color.WHITE)
+            afterContent.setLineSpacing(8f, 1.1f)
+            afterContent.setPadding(0, 8, 0, 0)
+            afterContent.typeface = appFont(R.font.pretendard_light)
+
+            afterWrap.addView(afterTitle)
+            afterWrap.addView(afterContent)
+            afterCard.addView(afterWrap)
 
             val reasonText = TextView(this)
             reasonText.text = reason
@@ -1075,7 +1253,8 @@ class cardResumeActivity : AppCompatActivity() {
             reasonText.setTextColor(Color.parseColor("#666666"))
             reasonText.gravity = android.view.Gravity.CENTER
             reasonText.setLineSpacing(6f, 1.1f)
-            reasonText.setPadding(20, 28, 20, 16)
+            reasonText.setPadding(25, 28, 25, 20)
+            reasonText.typeface = appFont(R.font.pretendard_light)
 
             container.addView(beforeCard)
             container.addView(arrowText)
@@ -1154,62 +1333,77 @@ class cardResumeActivity : AppCompatActivity() {
 
         val container = LinearLayout(this)
         container.orientation = LinearLayout.VERTICAL
-        container.setPadding(24, 24, 24, 24)
+        container.setPadding(40, 35, 40, 32)
 
         val topRow = LinearLayout(this)
         topRow.orientation = LinearLayout.HORIZONTAL
+        topRow.gravity = Gravity.CENTER_VERTICAL
 
         val titleView = TextView(this)
         titleView.text = title
-        titleView.textSize = 18f
+        titleView.textSize = 16f
         titleView.setTextColor(Color.parseColor("#333333"))
-        titleView.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        titleView.typeface = appFont(R.font.pretendard_regular)
+        titleView.layoutParams = LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f
+        )
 
         val scoreView = TextView(this)
         scoreView.text = "$score"
         scoreView.textSize = 22f
         scoreView.setTextColor(Color.parseColor("#4A5BFF"))
-        scoreView.setTypeface(null, android.graphics.Typeface.BOLD)
+        scoreView.typeface = appFont(R.font.pretendard_bold)
 
         val suffixView = TextView(this)
         suffixView.text = "/100"
         suffixView.textSize = 14f
         suffixView.setTextColor(Color.parseColor("#999999"))
-        suffixView.setPadding(6, 8, 0, 0)
+        suffixView.typeface = appFont(R.font.pretendard_regular)
+        suffixView.setPadding(6, 6, 0, 0)
 
         topRow.addView(titleView)
         topRow.addView(scoreView)
         topRow.addView(suffixView)
 
-        val progressBg = View(this)
-        progressBg.setBackgroundColor(Color.parseColor("#D9D9D9"))
-
         val progressWrap = android.widget.FrameLayout(this)
         val progressParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
-            14
+            20
         )
         progressParams.topMargin = 14
         progressWrap.layoutParams = progressParams
 
+        val bgDrawable = android.graphics.drawable.GradientDrawable()
+        bgDrawable.setColor(Color.parseColor("#D9D9D9"))
+        bgDrawable.cornerRadius = 999f
+
+        val progressBg = View(this)
         val bgParams = android.widget.FrameLayout.LayoutParams(
             android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-            14
+            18
         )
         progressBg.layoutParams = bgParams
+        progressBg.background = bgDrawable
         progressWrap.addView(progressBg)
 
+        val fillDrawable = android.graphics.drawable.GradientDrawable()
+        fillDrawable.setColor(Color.parseColor("#4A5BFF"))
+        fillDrawable.cornerRadius = 999f
+
         val progressFill = View(this)
-        progressFill.setBackgroundColor(Color.parseColor("#4A5BFF"))
+        val fillWidth = (score * 6).coerceAtMost(600)
         val fillParams = android.widget.FrameLayout.LayoutParams(
-            (score * 6),
-            14
+            fillWidth,
+            18
         )
         progressFill.layoutParams = fillParams
+        progressFill.background = fillDrawable
         progressWrap.addView(progressFill)
 
         val reasonCard = com.google.android.material.card.MaterialCardView(this)
-        reasonCard.radius = 14f
+        reasonCard.radius = 16f
         reasonCard.cardElevation = 0f
         reasonCard.strokeWidth = 0
         reasonCard.setCardBackgroundColor(Color.WHITE)
@@ -1218,18 +1412,21 @@ class cardResumeActivity : AppCompatActivity() {
         reasonText.text = reason
         reasonText.textSize = 15f
         reasonText.setTextColor(Color.parseColor("#333333"))
-        reasonText.setPadding(22, 22, 22, 22)
+        reasonText.typeface = appFont(R.font.pretendard_regular)
+        reasonText.setLineSpacing(6f, 1.1f)
+        reasonText.setPadding(24, 24, 24, 24)
         reasonCard.addView(reasonText)
+
 
         val reasonParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        reasonParams.topMargin = 22
+        reasonParams.topMargin = 35
         reasonCard.layoutParams = reasonParams
 
         val improvementCard = com.google.android.material.card.MaterialCardView(this)
-        improvementCard.radius = 14f
+        improvementCard.radius = 16f
         improvementCard.cardElevation = 0f
         improvementCard.strokeWidth = 0
         improvementCard.setCardBackgroundColor(Color.WHITE)
@@ -1238,7 +1435,9 @@ class cardResumeActivity : AppCompatActivity() {
         improvementText.text = improvement
         improvementText.textSize = 15f
         improvementText.setTextColor(Color.parseColor("#333333"))
-        improvementText.setPadding(22, 22, 22, 22)
+        improvementText.typeface = appFont(R.font.pretendard_regular)
+        improvementText.setLineSpacing(6f, 1.1f)
+        improvementText.setPadding(24, 24, 24, 24)
         improvementCard.addView(improvementText)
 
         val improvementParams = LinearLayout.LayoutParams(
@@ -1259,8 +1458,7 @@ class cardResumeActivity : AppCompatActivity() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        outerParams.topMargin = 16
+        outerParams.topMargin = 18
         parent.addView(outerCard, outerParams)
     }
-
-}
+    }

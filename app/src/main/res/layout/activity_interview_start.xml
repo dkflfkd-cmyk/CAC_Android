@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/bottomLayout"
+        layout="@layout/bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/mainScrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintBottom_toTopOf="@id/bottomLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="40dp">
+
+            <View
+                android:id="@+id/bannerArrow"
+                android:layout_width="20dp"
+                android:layout_height="14dp"
+                android:background="@drawable/bg_question_banner_arrow"
+                app:layout_constraintBottom_toTopOf="@id/interviewBodyCard"
+                app:layout_constraintStart_toStartOf="@id/interviewBodyCard"
+                app:layout_constraintEnd_toEndOf="@id/interviewBodyCard"
+                android:translationY="1dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/interviewBodyCard"
+                android:layout_width="0dp"
+                android:layout_height="420dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="50dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:strokeWidth="0dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingBottom="16dp">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/questionBanner"
+                        android:layout_width="0dp"
+                        android:layout_height="160dp"
+                        android:background="@drawable/bg_question_banner"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <TextView
+                            android:id="@+id/txtQuestion"
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_marginHorizontal="24dp"
+                            android:gravity="center"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/pretendard_light"
+                            android:text="사용자 경험을 개선한 프로젝트 사례를 설명해주세요."
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toTopOf="@id/progressQuestionLayout"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent" />
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/progressQuestionLayout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="24dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <ProgressBar
+                                android:id="@+id/progressQuestion"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="12dp"
+                                android:layout_marginStart="32dp"
+                                android:layout_marginEnd="12dp"
+                                android:progressTint="#FFFFFF"
+                                android:progressBackgroundTint="#888888"
+                                android:max="5"
+                                android:progress="1"
+                                app:layout_constraintEnd_toStartOf="@id/txtProgress"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:layout_constraintBottom_toBottomOf="parent" />
+
+                            <TextView
+                                android:id="@+id/txtProgress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="32dp"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:text="1/5"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <FrameLayout
+                        android:id="@+id/answerAreaContainer"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp"
+                        app:layout_constraintTop_toBottomOf="@id/questionBanner"
+                        app:layout_constraintBottom_toTopOf="@id/btnRefresh"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <androidx.core.widget.NestedScrollView
+                            android:id="@+id/scrollAnswer"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone">
+                            <TextView
+                                android:id="@+id/txtAnswer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="24dp"
+                                android:paddingVertical="16dp"
+                                android:textColor="#444444"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="8dp"
+                                android:fontFamily="@font/pretendard_regular" />
+                        </androidx.core.widget.NestedScrollView>
+
+                        <LinearLayout
+                            android:id="@+id/layoutDots"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+                            <View android:id="@+id/dot1" android:layout_width="10dp" android:layout_height="10dp" android:background="@drawable/bg_mic_circle" android:backgroundTint="#B0B0B0" />
+                            <View android:id="@+id/dot2" android:layout_width="10dp" android:layout_height="10dp" android:layout_marginStart="12dp" android:background="@drawable/bg_mic_circle" android:backgroundTint="#B0B0B0" />
+                            <View android:id="@+id/dot3" android:layout_width="10dp" android:layout_height="10dp" android:layout_marginStart="12dp" android:background="@drawable/bg_mic_circle" android:backgroundTint="#B0B0B0" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnRefresh"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_refresh"
+                        android:visibility="invisible"
+                        app:tint="#647AF6"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/micWrapCard"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                app:cardCornerRadius="100dp"
+                app:cardElevation="12dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:layout_constraintTop_toBottomOf="@id/interviewBodyCard"
+                app:layout_constraintBottom_toBottomOf="@id/interviewBodyCard"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="12dp">
+
+                    <View
+                        android:id="@+id/micBackground"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_mic_circle" />
+
+                    <ImageButton
+                        android:id="@+id/btnMic"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:padding="20dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_mic"
+                        app:tint="#FFFFFF" />
+
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layoutFeedbackResult"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="60dp"
+                android:layout_marginHorizontal="24dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#647AF6"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp"
+                app:layout_constraintTop_toBottomOf="@id/micWrapCard"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp"
+                    android:clipChildren="false">
+
+                    <TextView
+                        android:id="@+id/txtFeedbackTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI 피드백"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginLeft="6dp"
+                        android:textSize="17sp"
+                        android:fontFamily="@font/pretendard_regular"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="@id/imgStar" />
+
+                    <ImageView
+                        android:id="@+id/imgStar"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginRight="7dp"
+                        android:layout_marginTop="5dp"
+                        android:src="@drawable/ic_star_outline"
+                        app:tint="#FFFFFF"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/feedbackItem1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="45dp"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:cardCornerRadius="12dp"
+                        app:strokeWidth="0dp"
+                        app:layout_constraintTop_toBottomOf="@id/imgStar"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+                        <LinearLayout
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp">
+                            <TextView
+                                android:text="말하기 속도"
+                                android:textSize="12sp"
+                                android:textColor="#647AF6"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                            <TextView
+                                android:text="조금 빠름"
+                                android:textSize="16sp"
+                                android:textColor="#333333"
+                                android:layout_marginTop="4dp"
+                                android:textStyle="bold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/feedbackItem2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:cardCornerRadius="12dp"
+                        app:strokeWidth="0dp"
+                        app:layout_constraintTop_toBottomOf="@id/feedbackItem1"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+                        <LinearLayout
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp">
+                            <TextView
+                                android:text="내용 평가"
+                                android:textSize="12sp"
+                                android:textColor="#647AF6"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                            <TextView
+                                android:text="핵심 내용은 잘 전달되었으나 여유있게 말하면 좋겠습니다."
+                                android:textSize="16sp"
+                                android:textColor="#333333"
+                                android:fontFamily="@font/pretendard_light"
+                                android:layout_marginTop="4dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/feedbackItem3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:cardCornerRadius="12dp"
+                        app:strokeWidth="0dp"
+                        app:layout_constraintTop_toBottomOf="@id/feedbackItem2"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+                        <LinearLayout
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="16dp">
+                            <TextView
+                                android:text="개선 팁"
+                                android:textSize="12sp"
+                                android:textColor="#647AF6"
+
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                            <TextView
+                                android:text="• 중요한 부분에서 잠시 멈춤을 활용하세요\n• 말 속도를 조금 늦춰보세요"
+                                android:textSize="16sp"
+                                android:textColor="#333333"
+                                android:layout_marginTop="4dp"
+                                android:fontFamily="@font/pretendard_light"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/tooltipLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.85"
+                android:visibility="gone"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="10dp"
+                app:strokeWidth="0dp"
+                app:layout_constraintBottom_toTopOf="@id/layoutFeedbackResult"
+                app:layout_constraintEnd_toEndOf="@id/layoutFeedbackResult"
+                android:layout_marginEnd="16dp"
+                android:translationY="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:text="마이페이지에 저장할 수 있어요!"
+                    android:textColor="#333333"
+                    android:fontFamily="@font/pretendard_light"
+                    android:textSize="11sp" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNextQuestion"
+                android:layout_width="0dp"
+                android:layout_height="66dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="32dp"
+                android:text="다음 질문으로"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                android:fontFamily="@font/pretendard_light"
+                app:backgroundTint="#000000"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/layoutFeedbackResult"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFinalMockInterview"
+                android:layout_width="0dp"
+                android:layout_height="66dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="32dp"
+                android:text="AI모의 면접 훈련 하기"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                android:fontFamily="@font/pretendard_light"
+                android:background="@drawable/bg_gradient_button"
+                app:backgroundTint="@null"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/layoutFeedbackResult"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

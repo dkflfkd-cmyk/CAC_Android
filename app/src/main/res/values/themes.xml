@@ -6,5 +6,10 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <style name="Theme.Cac." parent="Theme.Material3.DayNight">
+        <item name="android:fontFamily">@font/pretendard_light</item>
+        <item name="fontFamily">@font/pretendard_light</item>
+    </style>
+
     <style name="Theme.Cac" parent="Base.Theme.Cac" />
 </resources>

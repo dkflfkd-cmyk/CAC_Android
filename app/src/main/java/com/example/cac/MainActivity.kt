@@ -28,8 +28,12 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
+//ai 면접 하단 버튼
+        val btnintervew = findViewById<TextView>(R.id.btnInterview)
+        btnintervew.setOnClickListener {
+            val intent = Intent(this, InterviewActivity::class.java)
+            startActivity(intent)
+        }
 
 
 //마이페이지
@@ -56,10 +60,11 @@ class MainActivity : AppCompatActivity() {
         cardResume.setOnClickListener {
             startActivity(Intent(this, cardResumeActivity::class.java))
         }
-//커리어경로
-        val cardRoadmap = findViewById<View>(R.id.cardRoadmap)
-        cardRoadmap.setOnClickListener {
-            startActivity(Intent(this, cardRoadmapActivity::class.java))
+
+        //질문리스트
+        val cardlist = findViewById<View>(R.id.cardlist)
+        cardlist.setOnClickListener {
+            startActivity(Intent(this, QuestionSetupActivity::class.java))
         }
 
 

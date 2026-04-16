@@ -164,61 +164,10 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </FrameLayout>
 
-            <!-- 3) 학습 추천/커리어 경로 -->
-            <FrameLayout
-                android:id="@+id/cardRoadmap"
-                android:layout_width="161dp"
-                android:layout_height="196dp"
-                android:layout_marginEnd="12dp"
-                >
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/rectangle_7" />
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/txtRoadTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="학습 추천/\n커리어\n경로"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/txtRoadSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="맞춤 로드맵"
-                        android:textColor="#B3CCF2"
-                        android:textSize="12sp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/txtRoadTitle" />
-
-                    <TextView
-                        android:id="@+id/arrowRoad"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textColor="#111111"
-                        android:textSize="20sp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </FrameLayout>
 
             <!--예상 질문 리스트-->
             <FrameLayout
-                android:id="@+id/aslist"
+                android:id="@+id/cardlist"
                 android:layout_width="161dp"
                 android:layout_height="196dp"
                 >
@@ -464,115 +413,9 @@
         app:cardElevation="6dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardRecent">
+        app:layout_constraintTop_toBottomOf="@id/cardRecent"/>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:background="#FFFFFF">
 
-            <TextView
-                android:id="@+id/tossTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="토스"
-                android:textColor="#111111"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tossSub"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-
-                android:text="프론트엔드 개발자"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tossTitle" />
-
-            <TextView
-                android:id="@+id/tossMatch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2.4dp"
-                android:layout_marginEnd="8dp"
-                android:text="적합도 92%"
-                android:textColor="#1E40FF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@id/badgeNew"
-                app:layout_constraintTop_toTopOf="@id/tossTitle" />
-
-            <TextView
-                android:id="@+id/badgeNew"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_score"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:text="NEW"
-                android:textColor="#FFFFFF"
-                android:textSize="10sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tossTitle" />
-
-            <TextView
-                android:id="@+id/tossInfo1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="• 서울 강남구"
-                android:textColor="#111111"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tossSub" />
-
-            <TextView
-                android:id="@+id/tossInfo2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="• 신입~3년"
-                android:textColor="#111111"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tossInfo1" />
-
-            <TextView
-                android:id="@+id/tossInfo3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="• 4,000~6,000만 원"
-                android:textColor="#111111"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tossInfo2" />
-
-            <TextView
-                android:id="@+id/btnApply"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_btn_apply"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="지원하기→"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:clickable="true"
-                android:focusable="true"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
 
 
     <!-- 하단 탭 -->
@@ -608,7 +451,7 @@
 
 
         <TextView
-            android:id="@+id/btnNoticej"
+            android:id="@+id/btnInterview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -616,7 +459,7 @@
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
 
-            android:text="공고"
+            android:text="AI면접"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"

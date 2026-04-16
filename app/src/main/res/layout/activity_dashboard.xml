@@ -209,156 +209,6 @@
                 android:backgroundTint="#FFFFFF"
                 >
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="성장 추이"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#111111" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="면접 연습 회차별 점수 변화"
-                        android:textSize="11sp"
-                        android:textColor="#777777"
-                        android:layout_marginTop="4dp" />
-
-                    <com.github.mikephil.charting.charts.LineChart
-                        android:id="@+id/lineChart"
-                        android:layout_width="match_parent"
-                        android:layout_height="220dp"
-                        android:layout_marginTop="12dp" />
-
-                    <!-- 작은 통계 3개 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="0dp"
-                            app:cardBackgroundColor="#F2F2F2">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="14dp"
-                                android:gravity="center">
-
-                                <TextView
-                                    android:id="@+id/txtScoreImprovement"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="+13"
-                                    android:textSize="23sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#111111" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="점수 향상"
-                                    android:textSize="11sp"
-                                    android:textColor="#777777"
-                                    android:layout_marginTop="2dp" />
-                            </LinearLayout>
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <Space
-                            android:layout_width="10dp"
-                            android:layout_height="1dp" />
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="0dp"
-                            app:cardBackgroundColor="#F2F2F2">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="14dp"
-                                android:gravity="center">
-
-                                <TextView
-                                    android:id="@+id/txtTotalCount"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="5회"
-                                    android:textSize="23sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#111111" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="총 연습"
-                                    android:textSize="11sp"
-                                    android:textColor="#777777"
-                                    android:layout_marginTop="2dp" />
-                            </LinearLayout>
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <Space
-                            android:layout_width="10dp"
-                            android:layout_height="1dp" />
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="0dp"
-                            app:cardBackgroundColor="#F2F2F2">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="14dp"
-                                android:gravity="center">
-
-                                <TextView
-                                    android:id="@+id/txtGrowthRate"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="20%"
-                                    android:textSize="23sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#111111" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="성장률"
-                                    android:textSize="11sp"
-                                    android:textColor="#777777"
-                                    android:layout_marginTop="2dp" />
-                            </LinearLayout>
-                        </com.google.android.material.card.MaterialCardView>
-
-                    </LinearLayout>
-                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- 3) 역량별 평균 점수  -->
@@ -391,7 +241,159 @@
                         android:id="@+id/radarChart"
                         android:layout_width="match_parent"
                         android:layout_height="320dp"
-                        android:layout_marginTop="12dp" />
+                        android:layout_marginTop="12dp" >
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="성장 추이"
+                                android:textColor="#111111"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="면접 연습 회차별 점수 변화"
+                                android:textColor="#777777"
+                                android:textSize="11sp" />
+
+                            <com.github.mikephil.charting.charts.LineChart
+                                android:id="@+id/lineChart"
+                                android:layout_width="match_parent"
+                                android:layout_height="220dp"
+                                android:layout_marginTop="12dp" />
+
+                            <!-- 작은 통계 3개 -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal">
+
+                                <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    app:cardBackgroundColor="#F2F2F2"
+                                    app:cardCornerRadius="12dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeWidth="0dp">
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="14dp">
+
+                                        <TextView
+                                            android:id="@+id/txtScoreImprovement"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="+13"
+                                            android:textColor="#111111"
+                                            android:textSize="23sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="2dp"
+                                            android:text="점수 향상"
+                                            android:textColor="#777777"
+                                            android:textSize="11sp" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="1dp" />
+
+                                <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    app:cardBackgroundColor="#F2F2F2"
+                                    app:cardCornerRadius="12dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeWidth="0dp">
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="14dp">
+
+                                        <TextView
+                                            android:id="@+id/txtTotalCount"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="5회"
+                                            android:textColor="#111111"
+                                            android:textSize="23sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="2dp"
+                                            android:text="총 연습"
+                                            android:textColor="#777777"
+                                            android:textSize="11sp" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="1dp" />
+
+                                <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    app:cardBackgroundColor="#F2F2F2"
+                                    app:cardCornerRadius="12dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeWidth="0dp">
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="14dp">
+
+                                        <TextView
+                                            android:id="@+id/txtGrowthRate"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="20%"
+                                            android:textColor="#111111"
+                                            android:textSize="23sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="2dp"
+                                            android:text="성장률"
+                                            android:textColor="#777777"
+                                            android:textSize="11sp" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                            </LinearLayout>
+                        </LinearLayout>
+                    </com.github.mikephil.charting.charts.RadarChart>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -871,6 +873,7 @@
                                     android:text="92%"
                                     android:textSize="31sp"
                                     android:layout_marginTop="2dp"
+                                    android:fontFamily="@font/pretendard_bold"
                                     android:layout_marginRight="5dp"
                                     android:textColor="#2EAF4B" />
                             </LinearLayout>
@@ -986,6 +989,7 @@
                                     android:textSize="31sp"
                                     android:layout_marginTop="2dp"
                                     android:layout_marginRight="5dp"
+                                    android:fontFamily="@font/pretendard_bold"
                                     android:textColor="#3950E7" />
                             </LinearLayout>
 
@@ -1097,14 +1101,14 @@
             android:background="@null"/>
 
         <TextView
-            android:id="@+id/btnRoadmap"
+            android:id="@+id/btnNoticev"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-            android:text="커리어\n경로"
+            android:text="대시보드"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"
@@ -1113,7 +1117,7 @@
             android:background="@null"/>
 
         <TextView
-            android:id="@+id/btnNoticev"
+            android:id="@+id/btnhs"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -1129,14 +1133,14 @@
             android:background="@null"/>
 
         <TextView
-            android:id="@+id/btnNoticev2"
+            android:id="@+id/btnRoadmap"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-            android:text="MY"
+            android:text="커리어\n경로"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromDegrees="90"
+    android:toDegrees="90">
+
+    <shape android:shape="oval">
+        <gradient
+            android:type="sweep"
+            android:startColor="#CCEAF9"
+            android:endColor="#3950E7" />
+    </shape>
+
+</rotate>

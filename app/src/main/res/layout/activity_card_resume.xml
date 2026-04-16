@@ -194,10 +194,10 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnPickFile"
-                            android:layout_width="0dp"
-                            android:layout_height="52dp"
+                            android:layout_width="320dp"
+                            android:layout_height="57dp"
                             android:layout_marginTop="50dp"
-                            android:text="이력서 파일 선택"
+                            android:text="첨부 파일 선택"
                             android:textAllCaps="false"
                             android:textColor="#FFFFFF"
                             android:textSize="15sp"
@@ -206,6 +206,7 @@
                             app:icon="@drawable/ic_upload"
                             app:iconPadding="0dp"
                             app:iconSize="28dp"
+                            android:fontFamily="@font/pretendard_light"
                             app:iconTint="#FFFFFF"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -220,7 +221,8 @@
                             android:textAllCaps="false"
                             android:textColor="#FFFFFF"
                             android:textSize="12sp"
-                            app:backgroundTint="#3950E7"
+                            app:backgroundTint="#647AF6"
+                            android:fontFamily="@font/pretendard_light"
                             app:cornerRadius="30dp"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -257,7 +259,7 @@
                                 android:id="@+id/analyzeInner"
                                 android:layout_width="74dp"
                                 android:layout_height="74dp"
-                                android:background="@drawable/bg_analyze_circle"
+                                android:background="@drawable/bg_mic_circle"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
@@ -867,10 +869,13 @@
                     android:layout_marginLeft="9dp"
                     android:layout_marginTop="20dp"
                     android:layout_marginRight="9dp"
-                    android:backgroundTint="#111111"
+
+                    android:background="@drawable/bg_btn_gradient"
+                    app:backgroundTint="@null"
+
                     android:text="대시보드 보기 →"
                     android:textColor="#FFFFFF"
-                    android:textSize="15dp"
+                    android:textSize="15sp"
                     app:cornerRadius="10dp" />
 
             </LinearLayout>
@@ -907,7 +912,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/btnNoticej"
+            android:id="@+id/btnInterview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -917,7 +922,7 @@
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-            android:text="공고"
+            android:text="AI면접"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold" />
