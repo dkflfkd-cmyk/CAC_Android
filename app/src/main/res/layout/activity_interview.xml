@@ -118,27 +118,27 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnPickFile"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/boxJob"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="52dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:text="이력서 파일 선택"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp"
-                    app:backgroundTint="#111111"
-                    app:cornerRadius="10dp"
-                    app:icon="@drawable/ic_upload"
-                    app:iconPadding="0dp"
-                    app:iconSize="28dp"
-                    app:iconTint="#FFFFFF"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
+                    android:layout_height="44dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_marginTop="50dp"
+                    android:background="@drawable/bg_input_gray"
+                    app:layout_constraintTop_toBottomOf="@id/txtGuide"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/txtGuide" />
+                    app:layout_constraintEnd_toEndOf="parent">
+                    <EditText
+                        android:id="@+id/etJobInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent"
+                        android:hint="희망 직무"
+                        android:paddingStart="14dp"
+                        android:textSize="12sp"
+                        android:inputType="text" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -239,7 +239,7 @@
 
 
         <TextView
-            android:id="@+id/btnNoticej"
+            android:id="@+id/btnresume"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -247,7 +247,7 @@
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
 
-            android:text="공고"
+            android:text="이력서분석"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"

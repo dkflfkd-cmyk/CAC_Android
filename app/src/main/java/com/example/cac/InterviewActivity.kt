@@ -53,6 +53,12 @@ class InterviewActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        val btnresume = findViewById<TextView>(R.id.btnresume)
+        btnresume.setOnClickListener {
+            val intent = Intent(this, cardResumeActivity::class.java)
+            startActivity(intent)
+        }
+
         val btnDS = findViewById<TextView>(R.id.btnNoticev)
         btnDS.setOnClickListener {
             val intent = Intent(this, DashboardActivity::class.java)

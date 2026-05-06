@@ -89,9 +89,19 @@ class LoginActivity : AppCompatActivity() {
                     }
 
                     override fun onFailure(call: Call<TokenResponse>, t: Throwable) {
+
+                        android.util.Log.e("NETWORK_ERROR", "서버 연결 실패 원인: ", t)
+
+                        val errorMessage = when {
+                            t.message?.contains("cleartxt", ignoreCase = true) == true -> "보안 설정(HTTP) 오류: Manifest를 확인하세요."
+                            t.message?.contains("timeout", ignoreCase = true) == true -> "서버 응답 시간 초과: 서버 주소가 맞나요?"
+                            t.message?.contains("refused", ignoreCase = true) == true -> "서버가 연결을 거부함: 서버가 꺼져있을 수 있습니다."
+                            else -> "통신 실패 원인: ${t.message}"
+                        }
+
                         Toast.makeText(
                             this@LoginActivity,
-                            "통신 실패: ${t.message}",
+                            errorMessage,
                             Toast.LENGTH_LONG
                         ).show()
                     }

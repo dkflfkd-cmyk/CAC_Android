@@ -276,6 +276,9 @@ class cardResumeActivity : AppCompatActivity() {
                         }
 
                         Log.d("UPLOAD", "resumeId parsed=$resumeId")
+
+                        saveLatestResumeId(resumeId)
+
                         txtResult.text = "분석 요청 중..."
                         requestAnalyze(resumeId)
                     }
@@ -356,6 +359,15 @@ class cardResumeActivity : AppCompatActivity() {
 
         val requestBody = bytes.toRequestBody("application/pdf".toMediaTypeOrNull())
         return MultipartBody.Part.createFormData("file", safeName, requestBody)
+    }
+
+    //최근이력서 저장
+    private fun saveLatestResumeId(resumeId: Int) {
+        val sharedPref = getSharedPreferences("ResumePrefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putInt("last_resume_id", resumeId)
+            apply() // 비동기로 안전하게 저장
+        }
     }
 
     private fun requestAnalyze(resumeId: Int) {

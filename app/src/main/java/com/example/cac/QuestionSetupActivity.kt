@@ -1,5 +1,6 @@
 package com.example.cac
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -11,16 +12,20 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.cac.data.SessionRequest
+import com.example.cac.network.RetrofitClient
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class QuestionSetupActivity : AppCompatActivity() {
 
@@ -29,32 +34,17 @@ class QuestionSetupActivity : AppCompatActivity() {
     private var selectedCount: Int? = null
     private var selectedFileUri: Uri? = null
     private var selectedFileName: String? = null
+    private var selectedResumeId: Int? = null
+    private var selectedS3Key: String? = null
 
-    private lateinit var txtJob: TextView
+    private lateinit var etJobInput: EditText
     private lateinit var txtType: TextView
     private lateinit var txtCount: TextView
-
     private lateinit var fileRow: View
     private lateinit var txtFileName: TextView
     private lateinit var btnRemoveFile: ImageButton
     private lateinit var btnPickFile: MaterialButton
-
-    private val filePickerLauncher =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri == null) return@registerForActivityResult
-
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-
-            selectedFileUri = uri
-            selectedFileName = queryDisplayName(uri) ?: "이력서 파일"
-            txtFileName.text = selectedFileName
-
-            fileRow.visibility = View.VISIBLE
-            btnPickFile.visibility = View.GONE
-        }
+    private lateinit var cbLoadExisting: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,10 +52,7 @@ class QuestionSetupActivity : AppCompatActivity() {
         setContentView(R.layout.activity_question_setup)
 
         findView()
-
-        fileRow.visibility = View.GONE
-        btnPickFile.visibility = View.VISIBLE
-
+        initResumeLogic()
         setupTopBottomButtons()
         setupPickers()
         setupFileButton()
@@ -81,77 +68,54 @@ class QuestionSetupActivity : AppCompatActivity() {
     }
 
     private fun findView() {
-        txtJob = findViewById(R.id.txtJobHint)
+        etJobInput = findViewById(R.id.etJobInput)
         txtType = findViewById(R.id.txtTypeHint)
         txtCount = findViewById(R.id.txtCountHint)
-
         btnPickFile = findViewById(R.id.btnPickFile)
-
         fileRow = findViewById(R.id.fileRow)
         txtFileName = findViewById(R.id.txtFileName)
         btnRemoveFile = findViewById(R.id.btnRemoveFile)
+        cbLoadExisting = findViewById(R.id.cbLoadExisting)
     }
 
-    private fun setupTopBottomButtons() {
-        findViewById<TextView>(R.id.btnNoticev2).setOnClickListener {
-            startActivity(Intent(this, MYActivity::class.java))
-        }
+    private fun initResumeLogic() {
+        cbLoadExisting.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                val sharedPref = getSharedPreferences("ResumePrefs", Context.MODE_PRIVATE)
+                val lastId = sharedPref.getInt("last_resume_id", -1)
 
-        findViewById<TextView>(R.id.btnInterview).setOnClickListener {
-            startActivity(Intent(this, InterviewActivity::class.java))
-        }
-
-        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
-        }
-
-
-        findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
-            startActivity(Intent(this, DashboardActivity::class.java))
+                if (lastId != -1) {
+                    selectedResumeId = lastId
+                    btnPickFile.isEnabled = false
+                    btnPickFile.alpha = 0.5f
+                    Toast.makeText(this, "최근 분석한 이력서를 사용합니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    cbLoadExisting.isChecked = false
+                    Toast.makeText(this, "기존 분석 기록이 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                selectedResumeId = null
+                btnPickFile.isEnabled = true
+                btnPickFile.alpha = 1.0f
+            }
         }
     }
 
-    private fun setupPickers() {
-        val boxJob = findViewById<View>(R.id.boxJob)
-        val boxType = findViewById<View>(R.id.boxType)
-        val boxCount = findViewById<View>(R.id.boxCount)
+    private val filePickerLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) return@registerForActivityResult
 
-        boxJob.setOnClickListener {
-            val items = arrayOf("백엔드", "프론트엔드", "모바일", "데이터/AI", "UI/UX")
-            AlertDialog.Builder(this)
-                .setTitle("직무 선택")
-                .setItems(items) { _, which ->
-                    selectedJob = items[which]
-                    txtJob.text = selectedJob
-                    txtJob.setTextColor(Color.parseColor("#111111"))
-                }
-                .show()
-        }
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        boxType.setOnClickListener {
-            val items = arrayOf("기술", "인성", "프로젝트", "CS")
-            AlertDialog.Builder(this)
-                .setTitle("질문 유형")
-                .setItems(items) { _, which ->
-                    selectedType = items[which]
-                    txtType.text = selectedType
-                    txtType.setTextColor(Color.parseColor("#111111"))
-                }
-                .show()
-        }
+            selectedFileUri = uri
+            selectedFileName = queryDisplayName(uri) ?: "이력서 파일"
+            txtFileName.text = selectedFileName
 
-        boxCount.setOnClickListener {
-            val items = arrayOf("3", "5", "10")
-            AlertDialog.Builder(this)
-                .setTitle("질문 개수")
-                .setItems(items) { _, which ->
-                    selectedCount = items[which].toInt()
-                    txtCount.text = "${selectedCount}개"
-                    txtCount.setTextColor(Color.parseColor("#111111"))
-                }
-                .show()
+            // 버튼 숨기고 파일 정보 표시 (위치 고정됨)
+            fileRow.visibility = View.VISIBLE
+            btnPickFile.visibility = View.GONE
+            cbLoadExisting.isEnabled = false
         }
-    }
 
     private fun setupFileButton() {
         btnPickFile.setOnClickListener {
@@ -164,43 +128,94 @@ class QuestionSetupActivity : AppCompatActivity() {
             selectedFileUri = null
             selectedFileName = null
             txtFileName.text = ""
+
+            // 다시 버튼 표시하고 파일 정보 숨김
             fileRow.visibility = View.GONE
             btnPickFile.visibility = View.VISIBLE
+            cbLoadExisting.isEnabled = true
         }
     }
 
     private fun setupStartButton() {
-        val btnStartCircle = findViewById<View>(R.id.btnStartCircle)
+        findViewById<View>(R.id.btnStartCircle).setOnClickListener {
+            selectedJob = etJobInput.text.toString().trim()
 
-        btnStartCircle.setOnClickListener {
-            if (selectedJob == null || selectedType == null || selectedCount == null) {
+            if (selectedJob.isNullOrEmpty() || selectedType == null || selectedCount == null) {
                 Toast.makeText(this, "직무/유형/개수를 모두 선택해 주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (selectedFileUri == null) {
-                Toast.makeText(this, "이력서 파일을 선택해 주세요.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+                    val loginUserId = sharedPref.getString("user_id", "sample04") ?: "sample04"
 
-            val intent = Intent(this, QuestionListActivity::class.java)
-            intent.putExtra("job", selectedJob)
-            intent.putExtra("type", selectedType)
-            intent.putExtra("count", selectedCount)
-            intent.putExtra("resumeName", selectedFileName)
-            startActivity(intent)
+                    val request = SessionRequest(
+                        user_id = loginUserId,
+                        target_job = selectedJob!!,
+                        question_count = selectedCount!!,
+                        question_types = listOf(selectedType!!),
+                        analysis_id = selectedResumeId,
+                        pdf_s3_key = selectedS3Key
+                    )
+                    val response = RetrofitClient.api.createSession(request).execute()
+
+                    withContext(Dispatchers.Main) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val intent = Intent(this@QuestionSetupActivity, QuestionListActivity::class.java)
+                            intent.putExtra("session_id", response.body()!!.sessionId)
+
+
+                            intent.putExtra("job", selectedJob)
+                            intent.putExtra("type", txtType.text.toString())
+                            intent.putExtra("count", selectedCount)
+
+                            startActivity(intent)
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@QuestionSetupActivity, "오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
+    }
+
+    // 나머지 UI 설정 함수들(setupPickers, setupTitle 등)은 기존과 동일
+    private fun setupPickers() {
+        findViewById<View>(R.id.boxType).setOnClickListener {
+            val items = arrayOf("기술 (Technical)", "행동 (Behavioral)", "프로젝트 (Project)", "역량 (Competency)", "산업 (Industry)")
+            val serverValues = arrayOf("technical", "behavioral", "project", "competency", "industry")
+            AlertDialog.Builder(this).setTitle("질문 유형").setItems(items) { _, which ->
+                selectedType = serverValues[which]
+                txtType.text = items[which]
+                txtType.setTextColor(Color.parseColor("#111111"))
+            }.show()
+        }
+        findViewById<View>(R.id.boxCount).setOnClickListener {
+            val items = arrayOf("3", "5", "10")
+            AlertDialog.Builder(this).setTitle("질문 개수").setItems(items) { _, which ->
+                selectedCount = items[which].toInt()
+                txtCount.text = "${selectedCount}개"
+                txtCount.setTextColor(Color.parseColor("#111111"))
+            }.show()
+        }
+    }
+
+    private fun setupTopBottomButtons() {
+        findViewById<TextView>(R.id.btnNoticev2).setOnClickListener { startActivity(Intent(this, MYActivity::class.java)) }
+        findViewById<TextView>(R.id.btnInterview).setOnClickListener { startActivity(Intent(this, InterviewActivity::class.java)) }
+        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener { startActivity(Intent(this, MainActivity::class.java)) }
+        findViewById<TextView>(R.id.btnNoticev).setOnClickListener { startActivity(Intent(this, DashboardActivity::class.java)) }
     }
 
     private fun setupTitle() {
         val title = findViewById<TextView>(R.id.txtTitle)
-
         val text = "Career AI Coach"
         val spannable = SpannableString(text)
-
         val blue = Color.parseColor("#3950E7")
         val gray = Color.parseColor("#8A8A8A")
-
         spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 6, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -210,16 +225,13 @@ class QuestionSetupActivity : AppCompatActivity() {
         spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 11, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(StyleSpan(Typeface.BOLD), 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
         title.text = spannable
     }
 
     private fun queryDisplayName(uri: Uri): String? {
         contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (nameIndex == -1) return null
-            cursor.moveToFirst()
-            return cursor.getString(nameIndex)
+            if (nameIndex != -1 && cursor.moveToFirst()) return cursor.getString(nameIndex)
         }
         return null
     }

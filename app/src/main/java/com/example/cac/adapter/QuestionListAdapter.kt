@@ -28,7 +28,7 @@ class QuestionListAdapter(
 
     override fun onBindViewHolder(holder: QuestionViewHolder, position: Int) {
         val item = items[position]
-        holder.txtNumber.text = item.number.toString()
+        holder.txtNumber.text = (position + 1).toString()
         holder.txtQuestion.text = item.question
         holder.btnStart.setOnClickListener {
             onStartClick(position)
