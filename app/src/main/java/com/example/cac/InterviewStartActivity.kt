@@ -9,8 +9,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.media.MediaRecorder
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -31,10 +32,12 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.IOException
-
+import java.util.*
+import android.os.Handler
+import android.os.Looper
 class InterviewStartActivity : AppCompatActivity() {
 
-    // 뷰 바인딩 변수들
+    private var fullAnswer: String = ""
     private lateinit var mainScrollView: NestedScrollView
     private lateinit var scrollAnswer: NestedScrollView
     private lateinit var btnMic: ImageButton
@@ -49,78 +52,51 @@ class InterviewStartActivity : AppCompatActivity() {
     private lateinit var btnNextQuestion: View
     private lateinit var btnFinalMockInterview: View
 
-//질문 그래프
-
-
-    // 녹음 관련 변수
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
     private var isRecording = false
     private var isReadyToUpload = false
+    private lateinit var speechRecognizer: SpeechRecognizer
+    private var recognitionIntent: Intent? = null
 
-
-    private var isSaved = false          // 별표 저장 상태
-    private var isFirstQuestion = true    // 첫 질문 여부 (툴팁 제어)
-    private var isLastQuestion = false     // 마지막 질문 여부 (버튼 제어)
-    private var isTypingFinished = false
-
-    // 서버 통신용 ID
+    private var isSaved = false
+    private var isFirstQuestion = true
     private var sessionId: Int = -1
     private var questionId: Int = -1
-
-
     private var currentQuestionCount = 1
     private var totalQuestionCount = 3
-
-    private val handler = Handler(Looper.getMainLooper())
-    private var typeRunnable: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_interview_start)
 
-        // 인텐트 데이터 수신
         sessionId = intent.getIntExtra("session_id", -1)
         questionId = intent.getIntExtra("question_id", -1)
+        android.util.Log.d("FINAL_CHECK", "제출할 질문 ID: $questionId")
         val questionText = intent.getStringExtra("question_text").orEmpty()
         totalQuestionCount = intent.getIntExtra("count", 3)
+
+        if (questionId == -1) {
+            android.util.Log.e("DATA_CHECK", "question_id를 받지 못했습니다!")
+        }
+
         initViews()
+        initSpeechRecognizer()
+
         txtQuestion.text = questionText
 
         val progressQuestion = findViewById<ProgressBar>(R.id.progressQuestion)
         progressQuestion.max = totalQuestionCount
         progressQuestion.progress = currentQuestionCount
+        findViewById<TextView>(R.id.txtProgress).text = "$currentQuestionCount/$totalQuestionCount"
 
-        val txtProgress = findViewById<TextView>(R.id.txtProgress)
-        txtProgress.text = "$currentQuestionCount/$totalQuestionCount"
-
-        txtQuestion.text = questionText
-
-        // 별표 클릭 로직
-        imgStar.setOnClickListener {
-            toggleStarStatus()
-        }
-
-        // 마이크 클릭 로직 (녹음 시작/중지/전송)
-        btnMic.setOnClickListener {
-            handleMicClick()
-        }
-
-        //  재녹음 버튼 클릭
-        btnRefresh.setOnClickListener {
-            resetRecording()
-        }
-
-        // 다음 질문 클릭
-        btnNextQuestion.setOnClickListener {
-            moveToNextQuestion()
-        }
+        imgStar.setOnClickListener { toggleStarStatus() }
+        btnMic.setOnClickListener { handleMicClick() }
+        btnRefresh.setOnClickListener { resetRecording() }
+        btnNextQuestion.setOnClickListener { moveToNextQuestion() }
 
         setupTitle()
         setupBottomButtons()
-
-        // 초기 애니메이션
-        layoutDots.visibility = View.VISIBLE
         startDotAnimation()
     }
 
@@ -140,24 +116,68 @@ class InterviewStartActivity : AppCompatActivity() {
         btnFinalMockInterview = findViewById(R.id.btnFinalMockInterview)
     }
 
-    //  별표 토글
-    private fun toggleStarStatus() {
-        isSaved = !isSaved
-        if (isSaved) {
-            imgStar.setImageResource(R.drawable.ic_star_filled)
-            imgStar.setColorFilter(Color.parseColor("#FFD700")) // 노란색 별
-            tooltipLayout.visibility = View.GONE
-            requestToggleSave(true)
-        } else {
-            imgStar.setImageResource(R.drawable.ic_star_outline)
-            imgStar.setColorFilter(Color.WHITE)
-            requestToggleSave(false)
+    private fun initSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREAN)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000L)
         }
+
+        speechRecognizer.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {
+
+                scrollAnswer.visibility = View.VISIBLE
+            }
+
+            override fun onPartialResults(partialResults: Bundle?) {
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+
+                    val currentText = matches[0]
+                    txtAnswer.text = if (fullAnswer.isEmpty()) currentText else "$fullAnswer $currentText"
+                    scrollAnswer.post { scrollAnswer.fullScroll(View.FOCUS_DOWN) }
+                }
+            }
+
+            override fun onResults(results: Bundle?) {
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    // 한 문장이 확실히 끝났으므로 전체 문장 변수에 저장
+                    fullAnswer = if (fullAnswer.isEmpty()) matches[0] else "$fullAnswer ${matches[0]}"
+                    txtAnswer.text = fullAnswer
+                }
+
+                // 녹음 중이라면(버튼을 아직 안 눌렀다면) 자동으로 다시 듣기 시작
+                if (isRecording) {
+                    speechRecognizer.startListening(recognitionIntent)
+                }
+            }
+
+            override fun onError(error: Int) {
+                // 침묵으로 인해 멈춘 경우 자동으로 다시 듣기 실행
+                if (isRecording) {
+                    speechRecognizer.startListening(recognitionIntent)
+                }
+            }
+
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
     }
 
     private fun handleMicClick() {
         if (!isRecording && !isReadyToUpload) {
-            if (checkPermissions()) startRecording() else requestPermissions()
+            if (checkPermissions()) {
+                startRecording()
+            } else {
+                requestPermissions()
+            }
         } else if (isRecording) {
             stopRecording()
         } else if (isReadyToUpload) {
@@ -166,81 +186,102 @@ class InterviewStartActivity : AppCompatActivity() {
     }
 
     private fun startRecording() {
-        audioFile = File(externalCacheDir, "interview_answer.m4a")
-        mediaRecorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(audioFile?.absolutePath)
-            try {
+        try {
+
+            audioFile = File(externalCacheDir, "interview_audio.m4a")
+
+            mediaRecorder = MediaRecorder().apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFile(audioFile?.absolutePath)
                 prepare()
-                start()
-                isRecording = true
-                updateUIForRecording()
-                simulateSTT()
-            } catch (e: IOException) { e.printStackTrace() }
+                start() // 실제 녹음 시작
+            }
+
+            isRecording = true
+            txtAnswer.text = "답변을 녹음 중입니다..."
+            scrollAnswer.visibility = View.VISIBLE
+
+            // 아이콘을 빨간색으로 변경하여 녹음 중임을 표시
+            btnMic.setColorFilter(android.graphics.Color.parseColor("#FF0000"))
+
+        } catch (e: Exception) {
+            android.util.Log.e("AUDIO_ERROR", "녹음 시작 실패", e)
         }
     }
 
     private fun stopRecording() {
-        try { mediaRecorder?.stop() } catch (e: Exception) { e.printStackTrace() }
-        mediaRecorder?.release()
-        mediaRecorder = null
+        try {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+            mediaRecorder = null
+        } catch (e: Exception) { e.printStackTrace() }
+
         isRecording = false
-        isReadyToUpload = true
-        btnMic.setImageResource(R.drawable.ic_check)
-        micBackground.alpha = 1.0f
-        btnRefresh.visibility = View.VISIBLE
+
+
+        btnMic.clearColorFilter()
+        btnMic.visibility = View.INVISIBLE
+        layoutDots.visibility = View.VISIBLE
+        txtAnswer.text = "서버에서 답변을 분석 중입니다..."
+
+        // 바로 서버 전송 시작
+        uploadAnswer()
     }
 
     private fun uploadAnswer() {
-        if (audioFile == null || !audioFile!!.exists()) return
-
-        btnMic.visibility = View.INVISIBLE
-        layoutDots.visibility = View.VISIBLE // 분석 중 로딩 표시
+        val file = audioFile ?: return
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val requestFile = audioFile!!.asRequestBody("audio/m4a".toMediaTypeOrNull())
-                val audioPart = MultipartBody.Part.createFormData("audio_file", audioFile!!.name, requestFile)
+                // 1. 실제 오디오 파일(.m4a)을 전송용 Body로 생성
+                val requestFile = file.asRequestBody("audio/m4a".toMediaTypeOrNull())
+                val filePart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
 
-                // 답변 제출
-                val response = RetrofitClient.api.submitAnswer(questionId, sessionId, audioPart).execute()
+                // 2. 히스토리 데이터 (서버 명세에 따라 빈 리스트 혹은 실제 데이터 전달)
+                val historyJson = com.google.gson.Gson().toJson(emptyList<Map<String, String>>())
+                val historyBody = okhttp3.RequestBody.create("application/json".toMediaTypeOrNull(), historyJson)
+
+                // 3. 서버 호출
+                val response = RetrofitClient.api.submitAnswer(
+                    questionId = questionId,
+                    sessionId = sessionId,
+                    audioFile = filePart
+                ).execute()
 
                 withContext(Dispatchers.Main) {
-                    layoutDots.visibility = View.GONE
-                    btnMic.visibility = View.VISIBLE
                     if (response.isSuccessful && response.body() != null) {
-                        displayFeedback(response.body()!!)
+                        val data = response.body()!!
+
+
+                        txtAnswer.text = data.stt_text
+
+                        // 분석 완료 후 UI 복구: 점점점 숨기고 체크 아이콘 표시
+                        layoutDots.visibility = View.GONE
+                        btnMic.visibility = View.VISIBLE
+                        btnMic.setImageResource(R.drawable.ic_check) // 체크 아이콘으로 변경
+
+                        displayFeedback(data)
                     } else {
-                        Toast.makeText(this@InterviewStartActivity, "분석 실패", Toast.LENGTH_SHORT).show()
+                        resetUIOnError("분석 실패: ${response.code()}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    layoutDots.visibility = View.GONE
-                    btnMic.visibility = View.VISIBLE
-                    Toast.makeText(this@InterviewStartActivity, "서버 연결 오류", Toast.LENGTH_SHORT).show()
+                    resetUIOnError("네트워크 연결을 확인해 주세요.")
                 }
             }
         }
     }
-
     private fun displayFeedback(result: com.example.cac.data.AnswerResponse) {
         layoutFeedbackResult.visibility = View.VISIBLE
+        if (isFirstQuestion) tooltipLayout.visibility = View.VISIBLE
 
-        if (isFirstQuestion) {
-            tooltipLayout.visibility = View.VISIBLE
-        }
-
-        // 현재 질문 번호가 마지막인지 확인하여 버튼 교체
-        if (currentQuestionCount >= totalQuestionCount) {
-            btnNextQuestion.visibility = View.GONE
-            btnFinalMockInterview.visibility = View.VISIBLE
-        } else {
-            btnNextQuestion.visibility = View.VISIBLE
-            btnFinalMockInterview.visibility = View.GONE
-        }
+        // XML 구조에 맞게 텍스트 수정
+        val speedCard = findViewById<com.google.android.material.card.MaterialCardView>(R.id.feedbackItem1)
+        val speedValue = (speedCard.getChildAt(0) as LinearLayout).getChildAt(1) as TextView
+        speedValue.text = result.feedback_speed ?: "조금 빠름"
 
         if (currentQuestionCount >= totalQuestionCount) {
             btnNextQuestion.visibility = View.GONE
@@ -248,96 +289,48 @@ class InterviewStartActivity : AppCompatActivity() {
         } else {
             btnNextQuestion.visibility = View.VISIBLE
         }
-
-        mainScrollView.post {
-            mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top - 100)
-        }
+        mainScrollView.post { mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top) }
     }
 
+    private fun resetUIOnError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        layoutDots.visibility = View.GONE
+        btnMic.visibility = View.VISIBLE
+        btnMic.setImageResource(R.drawable.ic_mic) // 다시 마이크 아이콘으로
+        txtAnswer.text = "다시 녹음해 주세요."
+    }
     private fun resetRecording() {
+        fullAnswer = ""
         isRecording = false
         isReadyToUpload = false
-        typeRunnable?.let { handler.removeCallbacks(it) }
         txtAnswer.text = ""
         btnMic.setImageResource(R.drawable.ic_mic)
-        layoutDots.visibility = View.VISIBLE
-        scrollAnswer.visibility = View.GONE
+        btnMic.visibility = View.VISIBLE
         btnRefresh.visibility = View.INVISIBLE
         layoutFeedbackResult.visibility = View.GONE
-        micBackground.alpha = 1.0f
+        scrollAnswer.visibility = View.GONE
     }
 
     private fun moveToNextQuestion() {
         if (currentQuestionCount < totalQuestionCount) {
-
             currentQuestionCount++
-            isFirstQuestion = false
-
-            // 1. 별표 초기화
-            isSaved = false
-            imgStar.setImageResource(R.drawable.ic_star_outline)
-            imgStar.setColorFilter(Color.WHITE)
-
-            // 2. UI 요소 초기화
-            btnNextQuestion.visibility = View.GONE
-            btnFinalMockInterview.visibility = View.GONE
-            tooltipLayout.visibility = View.GONE
-            layoutFeedbackResult.visibility = View.GONE
-
-            // 3. 녹음 상태 초기화
             resetRecording()
-
-            // 4. 상단 그래프 및 숫자 업데이트
-            val progressQuestion = findViewById<ProgressBar>(R.id.progressQuestion)
-            progressQuestion.progress = currentQuestionCount
-
-            val txtProgress = findViewById<TextView>(R.id.txtProgress)
-            txtProgress.text = "$currentQuestionCount/$totalQuestionCount"
-
-            // 5. 화면 맨 위로 스크롤
+            findViewById<ProgressBar>(R.id.progressQuestion).progress = currentQuestionCount
+            findViewById<TextView>(R.id.txtProgress).text = "$currentQuestionCount/$totalQuestionCount"
             mainScrollView.smoothScrollTo(0, 0)
-
-            // TODO: 지혜님, 여기서 실제로 다음 질문 텍스트를 바꿔줘야 합니다!
-            // 예: txtQuestion.text = "다음 질문입니다."
-
-        } else {
-
-            Toast.makeText(this, "마지막 질문입니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
-    private fun requestToggleSave(save: Boolean) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                //질문 저장 토글 API
-                RetrofitClient.api.toggleSaveQuestion(questionId).execute()
-            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-
-    private fun simulateSTT() {
-        val fullText = "네, 사용자 경험을 개선한 프로젝트 경험이 있습니다..."
-        var currentIndex = 0
-        scrollAnswer.visibility = View.VISIBLE
-        layoutDots.visibility = View.GONE
-
-        typeRunnable = object : Runnable {
-            override fun run() {
-                if (isRecording && currentIndex < fullText.length) {
-                    txtAnswer.append(fullText[currentIndex].toString())
-                    currentIndex++
-                    scrollAnswer.post { scrollAnswer.scrollTo(0, txtAnswer.bottom) }
-                    handler.postDelayed(this, 30)
-                }
-            }
-        }
-        handler.post(typeRunnable!!)
+    private fun toggleStarStatus() {
+        isSaved = !isSaved
+        imgStar.setImageResource(if (isSaved) R.drawable.ic_star_filled else R.drawable.ic_star_outline)
+        imgStar.setColorFilter(if (isSaved) Color.parseColor("#FFD700") else Color.WHITE)
+        if (isSaved) tooltipLayout.visibility = View.GONE
     }
 
     private fun updateUIForRecording() {
-        micBackground.alpha = 0.8f
-        btnRefresh.visibility = View.INVISIBLE
-        txtAnswer.text = ""
+        micBackground.alpha = 0.5f
+        txtAnswer.text = "말씀해 주세요..."
     }
 
     private fun checkPermissions() = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -346,11 +339,12 @@ class InterviewStartActivity : AppCompatActivity() {
     private fun startDotAnimation() {
         val dots = listOf(R.id.dot1, R.id.dot2, R.id.dot3).map { findViewById<View>(it) }
         dots.forEachIndexed { index, dot ->
-            val animator = ObjectAnimator.ofFloat(dot, "alpha", 0.3f, 1f, 0.3f)
-            animator.duration = 1000
-            animator.repeatCount = ValueAnimator.INFINITE
-            animator.startDelay = (index * 200).toLong()
-            animator.start()
+            ObjectAnimator.ofFloat(dot, "alpha", 0.3f, 1f, 0.3f).apply {
+                duration = 1000
+                repeatCount = ValueAnimator.INFINITE
+                startDelay = (index * 200).toLong()
+                start()
+            }
         }
     }
 
@@ -360,8 +354,6 @@ class InterviewStartActivity : AppCompatActivity() {
         val spannable = SpannableString(text)
         val blue = Color.parseColor("#3950E7")
         val gray = Color.parseColor("#8A8A8A")
-
-
         spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(blue), 7, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -371,11 +363,12 @@ class InterviewStartActivity : AppCompatActivity() {
     }
 
     private fun setupBottomButtons() {
-        findViewById<TextView>(R.id.btnNoticev2).setOnClickListener {
-            startActivity(Intent(this, DashboardActivity::class.java))
-        }
-        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
-        }
+        findViewById<TextView>(R.id.btnNoticev2).setOnClickListener { startActivity(Intent(this, DashboardActivity::class.java)) }
+        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener { startActivity(Intent(this, MainActivity::class.java)) }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        speechRecognizer.destroy()
     }
 }

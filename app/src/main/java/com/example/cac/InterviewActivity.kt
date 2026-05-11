@@ -19,9 +19,11 @@ import android.widget.Toast
 import com.example.cac.data.ResumeRequest
 import com.example.cac.network.RetrofitClient
 import com.google.android.material.button.MaterialButton
-
-
-
+import com.example.cac.data.SessionRequest
+import com.example.cac.data.SessionResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class InterviewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,15 +31,41 @@ class InterviewActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_interview)
 
-
         // 챗화면 전환
         val btnStart = findViewById<android.view.View>(R.id.btnStartCircle)
 
         btnStart.setOnClickListener {
-            val intent = Intent(this, InterviewChatActivity::class.java)
+            btnStart.isEnabled = false
 
 
-            startActivity(intent)
+            val sessionRequest = SessionRequest(
+                user_id = SessionManager.getUserId(this) ?: "",
+                target_job = "개발자",
+                question_count = 10,
+                question_types = listOf("전공", "인성")
+            )
+
+            RetrofitClient.api.createSession(sessionRequest).enqueue(object : Callback<SessionResponse> {
+                override fun onResponse(call: Call<SessionResponse>, response: Response<SessionResponse>) {
+                    btnStart.isEnabled = true
+                    if (response.isSuccessful && response.body() != null) {
+                        val data = response.body()!!
+
+                        val intent = Intent(this@InterviewActivity, InterviewChatActivity::class.java).apply {
+
+                            putExtra("session_id", data.sessionId)
+                        }
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(this@InterviewActivity, "면접 세션 생성 실패", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
+                    btnStart.isEnabled = true
+                    Toast.makeText(this@InterviewActivity, "서버 연결 오류", Toast.LENGTH_SHORT).show()
+                }
+            })
         }
 
         val btnMy = findViewById<TextView>(R.id.btnNoticev2)
@@ -45,7 +73,6 @@ class InterviewActivity : AppCompatActivity() {
             val intent = Intent(this, MYActivity::class.java)
             startActivity(intent)
         }
-
 
         val btnhome = findViewById<TextView>(R.id.btnNoticeh)
         btnhome.setOnClickListener {
@@ -65,9 +92,6 @@ class InterviewActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
-
-
         fun showPicker(title: String, items: Array<String>, onPick: (String) -> Unit) {
             AlertDialog.Builder(this)
                 .setTitle(title)
@@ -77,68 +101,32 @@ class InterviewActivity : AppCompatActivity() {
                 .show()
         }
 
-
-        // 선택값 저장
         var selectedJob: String? = null
         var selectedType: String? = null
         var selectedCount: Int? = null
 
+        val title = findViewById<TextView>(R.id.txtTitle)
+        val text = "Career AI Coach"
+        val spannable = SpannableString(text)
+        val blue = Color.parseColor("#3950E7")
+        val gray = Color.parseColor("#8A8A8A")
 
+        spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 6, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(blue), 7, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 8, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 9, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(gray), 11, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
+        spannable.setSpan(StyleSpan(Typeface.BOLD), 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        title.text = spannable
 
-
-
-
-            val title = findViewById<TextView>(R.id.txtTitle)
-
-            val text = "Career AI Coach"
-            val spannable = SpannableString(text)
-
-            val blue = Color.parseColor("#3950E7")
-            val gray = Color.parseColor("#8A8A8A")
-
-            // Career (C만 파란색, 나머지 회색)
-            spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-            // 공백(회색)
-            spannable.setSpan(ForegroundColorSpan(gray), 6, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-            // AI (A는 파란색, I는 회색)
-            spannable.setSpan(ForegroundColorSpan(blue), 7, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(ForegroundColorSpan(gray), 8, 9, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-            // 공백(회색)
-            spannable.setSpan(ForegroundColorSpan(gray), 9, 10, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-            // Coach (C만 파란색, 나머지 회색)
-            spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannable.setSpan(
-                ForegroundColorSpan(gray),
-                11,
-                text.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-
-            title.text = spannable
-
-
-            spannable.setSpan(
-                StyleSpan(Typeface.BOLD),
-                0,
-                text.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            title.text = spannable
-
-
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
-            }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
-
-
-
     }
+}

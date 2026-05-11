@@ -182,6 +182,8 @@ class QuestionSetupActivity : AppCompatActivity() {
         }
     }
 
+
+
     // 나머지 UI 설정 함수들(setupPickers, setupTitle 등)은 기존과 동일
     private fun setupPickers() {
         findViewById<View>(R.id.boxType).setOnClickListener {

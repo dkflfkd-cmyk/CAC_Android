@@ -20,11 +20,7 @@ class cardRoadmapActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_card_roadmap)
 
-        val btnMy = findViewById<TextView>(R.id.btnNoticev2)
-        btnMy.setOnClickListener {
-            val intent = Intent(this, MYActivity::class.java)
-            startActivity(intent)
-        }
+
 
 
         val btnhome = findViewById<TextView>(R.id.btnNoticeh)

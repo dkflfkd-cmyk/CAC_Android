@@ -8,6 +8,7 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -23,79 +24,47 @@ import com.example.cac.ui.adapter.QuestionListAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.widget.Button
 
 class QuestionListActivity : AppCompatActivity() {
+
+    private lateinit var progressBar: ProgressBar
+    private lateinit var txtProgress: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_question_list)
 
-        //  Intent 데이터 받기
+        // 뷰 초기화
+        progressBar = findViewById(R.id.progressQuestion)
+        txtProgress = findViewById(R.id.txtProgress)
+
+        // Intent 데이터 받기
         val sessionId = intent.getIntExtra("session_id", -1)
         val job = intent.getStringExtra("job").orEmpty()
         val type = intent.getStringExtra("type").orEmpty()
         val count = intent.getIntExtra("count", 3)
 
-        // 세션 아이디가 없으면 진행 불가
-        if (sessionId == -1) {
-            Toast.makeText(this, "오류: 세션 정보가 없습니다.", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
+        // 상단 텍스트 정보 세팅
+        findViewById<TextView>(R.id.txtJobTitle).text = job
+        findViewById<TextView>(R.id.txtSubInfo).text = type
+        updateProgress(0, count) // 초기 0/count 상태
 
-        val txtJobTitle = findViewById<TextView>(R.id.txtJobTitle)
-        val txtSubInfo = findViewById<TextView>(R.id.txtSubInfo)
-        val txtProgress = findViewById<TextView>(R.id.txtProgress)
-        val rvQuestionList = findViewById<RecyclerView>(R.id.rvQuestionList)
-
-        txtJobTitle.text = job
-        txtSubInfo.text = type
-        txtProgress.text = "0/$count"
-
-        rvQuestionList.layoutManager = LinearLayoutManager(this)
-
-        // 화면 진입 시 무조건 기존 질문 리스트만 로드
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-
-                val networkCall = RetrofitClient.api.getQuestions(sessionId)
-                val serverResponse = networkCall.execute()
-                val questionList = serverResponse.body()
-
-                if (serverResponse.isSuccessful && questionList != null) {
-                    withContext(Dispatchers.Main) {
-                        val totalQuestions = questionList.size
-                        txtProgress.text = "0/$totalQuestions"
-                        txtJobTitle.text = job
-                        txtSubInfo.text = type
-
-                        val progressBar = findViewById<android.widget.ProgressBar>(R.id.progressQuestion)
-                        progressBar.progress = 0
-
-                        val questionItems = questionList.map { serverData ->
-                            QuestionItem(
-                                number = serverData.question_id,
-                                question = serverData.question_text
-                            )
-                        }
-
-                        rvQuestionList.adapter = QuestionListAdapter(questionItems) { position ->
-                            val intent = Intent(this@QuestionListActivity, InterviewStartActivity::class.java)
-                            intent.putExtra("session_id", sessionId)
-                            intent.putExtra("question_id", questionItems[position].number)
-                            intent.putExtra("question_text", questionItems[position].question)
-                            intent.putExtra("job", job)
-                            intent.putExtra("type", type)
-                            intent.putExtra("count", count)
-                            startActivity(intent)
-                        }
+        if (sessionId != -1) {
+            // AI 질문 생성
+            RetrofitClient.api.generateQuestions(sessionId).enqueue(object : retrofit2.Callback<List<com.example.cac.data.GeneratedQuestion>> {
+                override fun onResponse(
+                    call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>,
+                    response: retrofit2.Response<List<com.example.cac.data.GeneratedQuestion>>
+                ) {
+                    if (response.isSuccessful) {
+                        fetchQuestionsFromServer(sessionId, count)
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+                override fun onFailure(call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>, t: Throwable) {
+                    android.util.Log.e("API_CHECK", "통신 오류", t)
+                }
+            })
         }
 
         setupTitle()
@@ -107,15 +76,12 @@ class QuestionListActivity : AppCompatActivity() {
             insets
         }
 
-   //다시받기 버튼
-        val btnRecreateQuestions = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRecreateQuestions)
-        btnRecreateQuestions.setOnClickListener {
-
-            val intent = Intent(this, InterviewActivity::class.java).apply {
+        // 다시받기 버튼
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRecreateQuestions).setOnClickListener {
+            val intent = Intent(this, QuestionSetupActivity::class.java).apply {
                 putExtra("PREV_JOB", job)
                 putExtra("PREV_TYPE", type)
                 putExtra("PREV_COUNT", count)
-
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             startActivity(intent)
@@ -123,25 +89,65 @@ class QuestionListActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateProgress(current: Int, total: Int) {
+        progressBar.max = total
+        progressBar.progress = current
+        txtProgress.text = "$current/$total"
+    }
+
+    private fun fetchQuestionsFromServer(sessionId: Int, count: Int) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.api.getQuestions(sessionId).execute()
+                if (response.isSuccessful && response.body() != null) {
+                    val questionList = response.body()!!
+
+
+                    withContext(Dispatchers.Main) {
+                        val questionItems = questionList.mapIndexed { index, item ->
+                            QuestionItem(
+
+                                id = item.id,
+                                number = index + 1,
+
+                                question = item.question_text
+                            )
+                        }
+
+                        val rv = findViewById<RecyclerView>(R.id.rvQuestionList)
+                        rv.layoutManager = LinearLayoutManager(this@QuestionListActivity)
+
+
+
+
+                        rv.adapter = QuestionListAdapter(questionItems) { selectedItem ->
+
+                            android.util.Log.d("ID_CHECK", "클릭한 질문 ID: ${selectedItem.id}")
+                            android.util.Log.d("ID_CHECK", "클릭한 질문 내용: ${selectedItem.question}")
+
+                            val intent = Intent(this@QuestionListActivity, InterviewStartActivity::class.java).apply {
+                                putExtra("session_id", sessionId)
+                                putExtra("question_id", selectedItem.id) // it.id가 아니라 selectedItem.id입니다.
+                                putExtra("question_text", selectedItem.question)
+                                putExtra("count", count)
+                            }
+                            startActivity(intent)
+                        }
+
+                        // 전체 개수에 맞춰 그래프 세팅
+                        updateProgress(0, questionItems.size)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("API_CHECK", "통신 실패", e)
+            }
+        }
+    }
 
     private fun setupBottomButtons() {
-        val sessionId = intent.getIntExtra("session_id", -1)
-        val job = intent.getStringExtra("job").orEmpty()
-        val type = intent.getStringExtra("type").orEmpty()
-        val count = intent.getIntExtra("count", 3)
-
         findViewById<TextView>(R.id.btnNoticeh).setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-
-                putExtra("LAST_SESSION_ID", sessionId)
-                putExtra("LAST_JOB", job)
-                putExtra("LAST_TYPE", type)
-                putExtra("LAST_COUNT", count)
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
+            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
         }
-
         findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
         }
@@ -151,10 +157,8 @@ class QuestionListActivity : AppCompatActivity() {
         val title = findViewById<TextView>(R.id.txtTitle)
         val text = "Career AI Coach"
         val spannable = SpannableString(text)
-
         val blue = Color.parseColor("#3950E7")
         val gray = Color.parseColor("#8A8A8A")
-
         spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 6, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -164,7 +168,6 @@ class QuestionListActivity : AppCompatActivity() {
         spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(ForegroundColorSpan(gray), 11, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(StyleSpan(Typeface.BOLD), 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
         title.text = spannable
     }
 }

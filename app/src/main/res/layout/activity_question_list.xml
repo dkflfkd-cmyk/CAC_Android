@@ -4,16 +4,52 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="#FFFFFF"
+    android:fitsSystemWindows="true">
 
-    <include
-        android:id="@+id/headerLayout"
-        layout="@layout/header"
+    <View
+        android:id="@+id/titleBg"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
+        android:background="#FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="45dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="Career AI Coach"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txtSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="22dp"
+        android:layout_marginTop="6dp"
+        android:text="대화형 AI 면접"
+        android:textColor="#4C4C4C"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTitle" />
+
+    <ImageButton
+        android:id="@+id/btnMenu"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/group_1"
+        app:layout_constraintBottom_toBottomOf="@id/txtTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/txtTitle" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/topCard"
@@ -25,7 +61,7 @@
         app:cardCornerRadius="18dp"
         app:cardElevation="8dp"
         app:strokeWidth="0dp"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintTop_toBottomOf="@id/txtSubtitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -79,14 +115,14 @@
                     android:layout_marginLeft="13dp"
                     android:layout_marginBottom="7dp"
                     android:max="5"
-                    android:progress="1"
+                    android:progress="0"
                     android:progressDrawable="@drawable/bg_question_progress"/>
 
                 <TextView
                     android:id="@+id/txtProgress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1/5"
+                    android:text="0/5"
                     android:layout_marginRight="13dp"
                     android:layout_marginBottom="7dp"
                     android:textColor="#FFFFFF"
@@ -106,7 +142,7 @@
         android:clipToPadding="false"
         android:clipChildren="false"
         app:layout_constraintTop_toBottomOf="@id/topCard"
-        app:layout_constraintBottom_toTopOf="@id/bottomTab"
+        app:layout_constraintBottom_toTopOf="@id/btnRecreateQuestions"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -125,12 +161,9 @@
         app:cornerRadius="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomTab"
-        app:layout_constraintTop_toBottomOf="@id/rvQuestionList"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintBottom_toTopOf="@id/bottomTab" />
 
 
-    <!-- 하단 탭 -->
     <LinearLayout
         android:id="@+id/bottomTab"
         android:layout_width="0dp"
@@ -151,12 +184,10 @@
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="홈"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"
-
             android:clickable="true"
             android:focusable="true"
             android:background="@null"/>
@@ -170,12 +201,10 @@
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="AI면접"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"
-
             android:clickable="true"
             android:focusable="true"
             android:background="@null"/>
@@ -189,12 +218,10 @@
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="대시보드"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"
-
             android:clickable="true"
             android:focusable="true"
             android:background="@null"/>
@@ -208,15 +235,12 @@
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="MY"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"
-
             android:clickable="true"
             android:focusable="true"
             android:background="@null"/>
-
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

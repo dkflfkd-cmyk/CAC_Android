@@ -11,7 +11,7 @@ import com.example.cac.data.QuestionItem
 
 class QuestionListAdapter(
     private val items: List<QuestionItem>,
-    private val onStartClick: (Int) -> Unit
+    private val onStartClick: (QuestionItem) -> Unit // 👈 Int에서 QuestionItem으로 변경
 ) : RecyclerView.Adapter<QuestionListAdapter.QuestionViewHolder>() {
 
     inner class QuestionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -28,10 +28,17 @@ class QuestionListAdapter(
 
     override fun onBindViewHolder(holder: QuestionViewHolder, position: Int) {
         val item = items[position]
-        holder.txtNumber.text = (position + 1).toString()
+        //의 뷰 구조 유지
+        holder.txtNumber.text = item.number.toString()
         holder.txtQuestion.text = item.question
+
+        // 버튼 클릭 시 아이템 객체 전달
         holder.btnStart.setOnClickListener {
-            onStartClick(position)
+            onStartClick(item)
+        }
+        // 항목 전체 클릭 시에도 이동하도록 설정
+        holder.itemView.setOnClickListener {
+            onStartClick(item)
         }
     }
 

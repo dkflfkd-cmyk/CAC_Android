@@ -5,6 +5,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,12 +22,10 @@
         android:theme="@style/Theme.Cac"
         android:usesCleartextTraffic="true">
 
-
-
         <activity android:name=".QuestionSetupActivity"
             android:exported="false"/>
 
-        <activity android:name="InterviewStartActivity"
+        <activity android:name=".InterviewStartActivity"
             android:exported="false"/>
 
         <activity
@@ -30,16 +34,20 @@
             android:label="@string/title_activity_question_list"
             android:theme="@style/Theme.Cac" />
 
-
         <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+
+        <activity
+            android:name=".InterviewResultActivity"
+            android:exported="false" />
 
         <activity
             android:name=".InterviewChatActivity"
@@ -56,7 +64,8 @@
             android:exported="false" />
         <activity
             android:name=".cardRoadmapActivity"
-            android:exported="false" />
+            android:exported="false"
+            />
         <activity
             android:name=".cardResumeActivity"
             android:exported="false"

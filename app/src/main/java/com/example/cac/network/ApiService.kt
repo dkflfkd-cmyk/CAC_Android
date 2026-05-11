@@ -13,13 +13,24 @@ import com.example.cac.data.AnswerResponse
 import com.example.cac.data.SessionRequest
 import com.example.cac.data.SessionResponse
 import okhttp3.RequestBody
+import retrofit2.http.*
 
 interface ApiService {
 
-    // 회원가입
+
+
+
 
     @POST("auth/signup")
     fun signup(@Body body: com.example.cac.data.SignupRequest): Call<Map<String, Any>>
+
+//질문리스트
+    @GET("api/v1/sessions/{session_id}/questions")
+    fun getQuestions(
+        @Path("resume_id") resumeId: Int,
+        @Query("count") count: Int,
+        @Query("question_types") type: String
+    ): Call<List<GeneratedQuestion>>
 
     // 로그인 (토큰)
     @FormUrlEncoded
@@ -67,43 +78,103 @@ interface ApiService {
     @POST("interview/start")
     fun startInterview(@Body request: ResumeRequest): Call<ResumeResponse>
 
-    // 1. 면접 세션 생성 (Create Session)
 
+    //질문리스트
+    // 1. 세션 생성
     @POST("api/v1/sessions")
     fun createSession(
         @Body request: SessionRequest
     ): Call<SessionResponse>
 
-    // 2. 질문 생성 (Generate Session Questions)
+    // 2. AI 질문 생성
     @POST("api/v1/sessions/{session_id}/generate-questions")
     fun generateQuestions(
         @Path("session_id") sessionId: Int
     ): Call<List<GeneratedQuestion>>
 
-    // 3. 생성된 질문 가져오기 (Get Questions)
+    // 3. 세션별 질문 전체 조회
     @GET("api/v1/sessions/{session_id}/questions")
     fun getQuestions(
         @Path("session_id") sessionId: Int
     ): Call<List<GeneratedQuestion>>
 
-    // 4. 질문 저장 토글 (Toggle Save Question)
+    // 4. 질문 저장하기
     @PATCH("api/v1/questions/{question_id}")
     fun toggleSaveQuestion(
         @Path("question_id") questionId: Int
     ): Call<Map<String, Any>>
 
-    // 5. 답변 제출 및 분석 (Submit Answer)
+    // 5. 답변 제출 및 분석
     @Multipart
     @POST("api/v1/questions/{question_id}/answers")
     fun submitAnswer(
         @Path("question_id") questionId: Int,
         @Query("session_id") sessionId: Int,
         @Part audioFile: MultipartBody.Part
+        // @Part("history") history: RequestBody // PDF에 없으므로 서버 확인 필요
     ): Call<AnswerResponse>
 
-    // 6. 저장된 질문 목록 보기 (Get Saved Questions)
+    // 6. 피드백 요약
+    @GET("api/v1/sessions/{session_id}/summary")
+    fun getSessionSummary(
+        @Path("session_id") sessionId: Int
+    ): Call<ResponseBody>
+
+
+
+    //발화특성
+    @Multipart
+    @POST("interview/sessions/{session_id}/analyze-speech")
+    fun analyzeSpeech(
+        @Path("session_id") sessionId: Int,
+        @Header("Authorization") token: String, // 인증이 필요한 경우 추가
+        @Part audioFile: MultipartBody.Part
+    ): Call<Map<String, Any>>
+
+//채팅
+
+    @Multipart
+    @POST("api/v1/interview/sessions/{session_id}/answer")
+    fun submitAnswer(
+        @Path("session_id") sessionId: Int,
+        @Part audioFile: MultipartBody.Part,
+        @Part("history") history: okhttp3.RequestBody
+    ): Call<AnswerResponse>
+
+    //답변 제출 및 분석
+    @Multipart
+    @POST("api/v1/questions/{question_id}/answers")
+    fun submitAnswer(
+        @Path("question_id") questionId: Int,
+        @Query("session_id") sessionId: Int,
+        @Part audioFile: MultipartBody.Part,
+        @Part("history") history: okhttp3.RequestBody
+    ): Call<AnswerResponse>
+
+
+    // 저장된 질문 목록 보기
     @GET("api/v1/users/{user_id}/saved-questions")
     fun getSavedQuestions(
         @Path("user_id") userId: String
-    ): Call<List<GeneratedQuestion>>
+    ): Call<List<String>>
+
+
+
+
+    @GET("api/v1/interview/sessions/{session_id}/feedback")
+    fun getFeedback(
+        @Path("session_id") sessionId: Int
+    ): Call<FeedbackResponse>
+
 }
+
+//채팅
+
+
+
+//질문리스트 받
+data class QuestionResponse(
+    val resume_id: Int,
+    val job_title: String,
+    val questions: List<String>
+)

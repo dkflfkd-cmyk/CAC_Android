@@ -1,6 +1,14 @@
 package com.example.cac.data
 
+import com.google.gson.annotations.SerializedName
 data class QuestionItem(
-    val number: Int,
-    val question: String
+
+    @SerializedName("id")
+    val id: Int,
+    @SerializedName("question_text")
+    val question: String,
+
+
+    val number: Int
+
 )

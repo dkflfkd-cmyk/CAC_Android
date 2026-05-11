@@ -1,9 +1,15 @@
 package com.example.cac.data
 
+import com.google.gson.annotations.SerializedName
+
 data class GeneratedQuestion(
-    val question_id: Int,
+    @SerializedName("question_id")
+    val id: Int,
+
+    @SerializedName("question_text")
     val question_text: String,
-    val question_type: String,
+
     val order_num: Int,
-    val is_saved: Boolean = false
+    val session_id: Int?,
+    val question_type: String?
 )
