@@ -16,6 +16,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.cac.network.RetrofitClient
@@ -107,34 +108,36 @@ class InterviewChatActivity : AppCompatActivity() {
             }
         }
 
-
         btnComplete.setOnClickListener {
-
-            if (recordState == 1) {
+            if (recordState == 1 || recordState == 2) {
                 try {
-                    mediaRecorder?.apply {
-                        stop()
-                        release()
-                    }
+                    mediaRecorder?.stop()
+                    mediaRecorder?.release()
                     mediaRecorder = null
-                    recordState = 2 // 녹음 완료 상태로 전환
-                    (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7")) // 다시 파란색으로
+                    recordState = 2
+                    resetButtonVisibility()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
 
-            // 파일 존재 확인 후 전송
-            if (audioFile == null || !audioFile!!.exists()) {
+            // 파일 체크 후 토스트 메시지
+            if (audioFile == null || !audioFile!!.exists() || audioFile!!.length() <= 0L) {
                 Toast.makeText(this, "답변을 녹음해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            Log.d("InterviewTest", "답변 분석 및 전송 시작")
             uploadAudioAnswer(audioFile!!)
         }
 
-        btnReplay.setOnClickListener { reRecord() }
+        btnReplay.setOnClickListener {
+            // 녹음된 파일이 없으면 토스트 메시지
+            if (audioFile == null || !audioFile!!.exists() || audioFile!!.length() <= 0L) {
+                Toast.makeText(this, "답변을 녹음해주세요.", Toast.LENGTH_SHORT).show()
+            } else {
+                reRecord()
+            }
+        }
     }
     private fun fetchUserInfo() {
         val token = "Bearer ${SessionManager.getToken(this)}"
@@ -151,25 +154,29 @@ class InterviewChatActivity : AppCompatActivity() {
     private fun startRecording() {
         isAnalyzing = false
 
-
+        // 말풍선 유지 로직
         if (currentProcessingBubble == null) {
             currentProcessingBubble = createEmptyUserBubble()
-        } else {
-            currentProcessingBubble?.text = "."
         }
+
+
+        if (recordState == 2 && mediaRecorder != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                mediaRecorder?.resume() // 이어서 시작
+                recordState = 1
+                (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#FF5252"))
+                startUserTypingAnimation()
+                return
+            }
+        }
+
 
         recordState = 1
         (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#FF5252"))
-
         startUserTypingAnimation()
 
         try {
-
             audioFile = File(externalCacheDir, "interview_audio.m4a")
-            if (audioFile!!.exists()) {
-                audioFile!!.delete()
-            }
-
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -178,9 +185,7 @@ class InterviewChatActivity : AppCompatActivity() {
                 prepare()
                 start()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) { e.printStackTrace() }
     }
     private fun createEmptyUserBubble(): TextView {
         val layout = LinearLayout(this).apply {
@@ -247,6 +252,29 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun stopRecording() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                mediaRecorder?.pause() // 일시정지
+                recordState = 2 // 일시정지 상태로 변경
+
+                isAnalyzing = false
+                (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7"))
+                resetButtonVisibility()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // pause 도중 에러나면 그냥 완전히 멈추도록 처리
+                finishRecordingCompletely()
+            }
+        } else {
+
+            finishRecordingCompletely()
+        }
+    }
+
+
+    private fun finishRecordingCompletely() {
         try {
             mediaRecorder?.apply {
                 stop()
@@ -254,18 +282,11 @@ class InterviewChatActivity : AppCompatActivity() {
             }
             mediaRecorder = null
             recordState = 2
-
             isAnalyzing = false
-
-
             (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7"))
-
-
             resetButtonVisibility()
-
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.e("RECORD_ERROR", "중지 중 에러: ${e.message}")
         }
     }
 
@@ -330,12 +351,8 @@ class InterviewChatActivity : AppCompatActivity() {
     private fun uploadAudioAnswer(file: File) {
         if (isSubmitting) return
         isSubmitting = true
-
-
         isAnalyzing = true
         startUserTypingAnimation()
-
-
 
         val requestFile = file.asRequestBody("application/octet-stream".toMediaTypeOrNull())
         val audioPart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
@@ -348,20 +365,18 @@ class InterviewChatActivity : AppCompatActivity() {
 
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
-
-
                         currentProcessingBubble?.text = body.stt_text
                         currentProcessingBubble = null
 
 
-                        showTypingAnimation()
+                        recordState = 0
+                        resetButtonVisibility()
 
+                        showTypingAnimation()
                         Handler(Looper.getMainLooper()).postDelayed({
-                            removeTypingAnimation() // "..." 제거
+                            removeTypingAnimation()
                             if (!body.is_finished) {
                                 addInterviewerBubble(body.next_question)
-                                resetButtonVisibility()
-                                recordState = 0
                             } else {
                                 showDonePanelAnimation()
                             }
@@ -372,6 +387,8 @@ class InterviewChatActivity : AppCompatActivity() {
                 override fun onFailure(call: Call<AudioAnswerResponse>, t: Throwable) {
                     isSubmitting = false
                     isAnalyzing = false
+                    recordState = 0
+                    resetButtonVisibility()
                     removeTypingAnimation()
                     currentProcessingBubble?.text = "(분석 실패)"
                 }
@@ -565,17 +582,17 @@ class InterviewChatActivity : AppCompatActivity() {
 
     private fun resetButtonVisibility() {
         when (recordState) {
-            0 -> { // 초기 상태
+            0 -> { // 초기 상태: 녹음 버튼만 보임
                 btnRecord.visibility = View.VISIBLE
                 btnComplete.visibility = View.GONE
                 btnReplay.visibility = View.GONE
             }
-            1 -> { // 녹음 중
+            1 -> { // 녹음 중: 녹음 버튼만 보임
                 btnRecord.visibility = View.VISIBLE
                 btnComplete.visibility = View.GONE
                 btnReplay.visibility = View.GONE
             }
-            2 -> { // 중지 상태
+            2 -> { // 녹음 멈춤: 이때만 3개 버튼이 다 보임
                 btnRecord.visibility = View.VISIBLE
                 btnReplay.visibility = View.VISIBLE
                 btnComplete.visibility = View.VISIBLE

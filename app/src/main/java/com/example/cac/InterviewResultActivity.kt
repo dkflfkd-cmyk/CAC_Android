@@ -21,6 +21,16 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import com.example.cac.network.FeedbackResponse
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.charts.RadarChart
+import com.github.mikephil.charting.data.RadarData
+import com.github.mikephil.charting.data.RadarDataSet
+import com.github.mikephil.charting.data.RadarEntry
+import com.example.cac.network.InterviewResultResponse
+import com.example.cac.network.InterviewQuestionFeedback
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import android.widget.ProgressBar
 
 
 
@@ -34,7 +44,7 @@ class InterviewResultActivity : AppCompatActivity() {
 
         val sessionId = intent.getIntExtra("session_id", -1)
         if (sessionId != -1) {
-            fetchInterviewFeedback(sessionId)
+            fetchInterviewResult(sessionId)
         }
 
 
@@ -44,74 +54,122 @@ class InterviewResultActivity : AppCompatActivity() {
             insets
         }
 
-
-        val job = intent.getStringExtra("job").orEmpty()
-        val type = intent.getStringExtra("type").orEmpty()
-        val count = intent.getIntExtra("count", 0)
-
         setupTitle()
 
-        val txtKeyPoint1 = findViewById<TextView>(R.id.txtKeyPoint1)
-        val txtKeyPoint2 = findViewById<TextView>(R.id.txtKeyPoint2)
-        val txtKeyPoint3 = findViewById<TextView>(R.id.txtKeyPoint3)
+
+        val btnHome = findViewById<TextView>(R.id.btnNoticeh)      // 홈
+        val btnResume = findViewById<TextView>(R.id.btnresume)    // 이력서분석
+        val btnDashboard = findViewById<TextView>(R.id.btnNoticev) // 대시보드
+        val btnMy = findViewById<TextView>(R.id.btnNoticev2)      // MY
+
+
         val btnNextInterview = findViewById<MaterialButton>(R.id.btnNextInterview)
 
-        // 하단 탭 버튼들 연결
-        val btnNoticeh = findViewById<TextView>(R.id.btnNoticeh)
-        val btnNoticev = findViewById<TextView>(R.id.btnNoticev)
-        val btnresume = findViewById<TextView>(R.id.btnresume)
 
-
-
-        // 새로운 면접 시작 버튼 클릭 시 메인 화면
         btnNextInterview.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
-
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
         }
 
-        // 하단 홈 탭 버튼 클릭 이벤트
-        btnNoticeh.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+        // 홈 버튼
+        btnHome.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
             finish()
         }
 
-        // 하단 이력서 버튼 클릭 이벤트
-        btnresume.setOnClickListener {
-            startActivity(Intent(this, cardResumeActivity::class.java))
+        // 이력서 분석 버튼
+        btnResume.setOnClickListener {
+            // cardResumeActivity 이름 확인 필요 (대문자/소문자)
+            val intent = Intent(this, cardResumeActivity::class.java)
+            startActivity(intent)
             finish()
         }
 
-        // 하단 대시보드 탭 버튼 클릭 이벤트
-        btnNoticev.setOnClickListener {
-            startActivity(Intent(this, DashboardActivity::class.java))
+        // 대시보드 버튼
+        btnDashboard.setOnClickListener {
+            val intent = Intent(this, DashboardActivity::class.java)
+            startActivity(intent)
             finish()
         }
 
-
+        // MY 버튼
+        btnMy.setOnClickListener {
+            // startActivity(Intent(this, MyPageActivity::class.java))
+        }
     }
 
-    private fun fetchInterviewFeedback(sessionId: Int) {
+    private fun fetchInterviewResult(sessionId: Int) {
+        // 1. Call 타입을 FeedbackResponse -> InterviewResultResponse로 변경
+        RetrofitClient.api.getInterviewFeedback(sessionId).enqueue(object : retrofit2.Callback<InterviewResultResponse> {
 
-        RetrofitClient.api.getInterviewFeedback(sessionId).enqueue(object : retrofit2.Callback<FeedbackResponse> {
-            override fun onResponse(call: Call<FeedbackResponse>, response: retrofit2.Response<FeedbackResponse>) {
-                if (response.isSuccessful) {
-                    val feedback = response.body()
+            // 2. onResponse 파라미터 타입도 변경
+            override fun onResponse(call: Call<InterviewResultResponse>, response: Response<InterviewResultResponse>) {
+                android.util.Log.e("@@RESULT", "서버 응답 확인: ${response.body().toString()}")
+                if (response.isSuccessful && response.body() != null) {
+                    // 바뀐 모델 구조에 맞춰 데이터 가져오기
+                    val feedbackData = response.body()!!.feedback
 
+                    // 점수 세팅
+                    findViewById<TextView>(R.id.txtTotalScore).text = feedbackData.overall_score.toInt().toString()
 
-                    findViewById<TextView>(R.id.txtTotalScore).text = feedback?.total_score.toString()
-                    findViewById<TextView>(R.id.txtKeyPoint1).text = feedback?.key_points?.getOrNull(0)
-                    findViewById<TextView>(R.id.txtKeyPoint2).text = feedback?.key_points?.getOrNull(1)
-                    findViewById<TextView>(R.id.txtKeyPoint3).text = feedback?.key_points?.getOrNull(2)
+                    // 리사이클러뷰 연결
+                    val recyclerView = findViewById<RecyclerView>(R.id.recyclerFeedback)
+                    recyclerView.layoutManager = LinearLayoutManager(this@InterviewResultActivity)
 
+                    // 어댑터에 전달하는 리스트 타입도 확인 필요 (InterviewQuestionFeedback)
+                    recyclerView.adapter = InterviewFeedbackAdapter(feedbackData.question_feedbacks)
 
+                    // 차트 업데이트
+                    setupRadarChart(feedbackData.competency_scores)
+
+                } else {
+                    Toast.makeText(this@InterviewResultActivity, "결과를 불러올 수 없습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
-            override fun onFailure(call: Call<FeedbackResponse>, t: Throwable) {
-                Toast.makeText(this@InterviewResultActivity, "결과 조회 실패", Toast.LENGTH_SHORT).show()
+
+            override fun onFailure(call: Call<InterviewResultResponse>, t: Throwable) {
+                Toast.makeText(this@InterviewResultActivity, "오류: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun setupRadarChart(scores: Map<String, Int>) {
+        // XML의 chartRadarContainer 내부에 RadarChart가 추가되어 있어야 함 (아래 2번 항목 참고)
+        val radarChart = findViewById<RadarChart>(R.id.radarChart) ?: return
+
+        val entries = ArrayList<RadarEntry>()
+        val labels = arrayOf("기술", "소통", "문제해결", "협업", "열정")
+        val keys = arrayOf("technical", "communication", "problem_solving", "collaboration", "passion")
+
+        for (key in keys) {
+            entries.add(RadarEntry((scores[key] ?: 0).toFloat()))
+        }
+
+        val dataSet = RadarDataSet(entries, "역량 지표")
+        dataSet.apply {
+            color = Color.parseColor("#3950E7")
+            fillColor = Color.parseColor("#3950E7")
+            setDrawFilled(true)
+            fillAlpha = 150
+            lineWidth = 2f
+            valueTextSize = 0f
+        }
+
+        radarChart.apply {
+            data = RadarData(dataSet)
+            description.isEnabled = false
+            legend.isEnabled = false
+            xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+            yAxis.apply {
+                axisMinimum = 0f
+                axisMaximum = 100f
+                setDrawLabels(false)
+            }
+            animateY(1000)
+            invalidate()
+        }
     }
 
     private fun setupTitle() {
