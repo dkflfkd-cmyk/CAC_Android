@@ -35,6 +35,13 @@ import java.io.IOException
 import java.util.*
 import android.os.Handler
 import android.os.Looper
+import com.example.cac.data.AnswerResponse
+import com.example.cac.data.AudioScores
+import com.example.cac.data.Feedback
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.widget.Toast
 class InterviewStartActivity : AppCompatActivity() {
 
     private var fullAnswer: String = ""
@@ -44,6 +51,10 @@ class InterviewStartActivity : AppCompatActivity() {
     private lateinit var micBackground: View
     private lateinit var layoutDots: View
     private lateinit var txtAnswer: TextView
+
+    private lateinit var txtAnalyzing: TextView
+    private var loadingHandler: Handler? = null
+    private var loadingRunnable: Runnable? = null
     private lateinit var btnRefresh: ImageButton
     private lateinit var layoutFeedbackResult: View
     private lateinit var txtQuestion: TextView
@@ -107,6 +118,7 @@ class InterviewStartActivity : AppCompatActivity() {
         micBackground = findViewById(R.id.micBackground)
         layoutDots = findViewById(R.id.layoutDots)
         txtAnswer = findViewById(R.id.txtAnswer)
+        txtAnalyzing = findViewById(R.id.txtAnalyzing)
         btnRefresh = findViewById(R.id.btnRefresh)
         layoutFeedbackResult = findViewById(R.id.layoutFeedbackResult)
         txtQuestion = findViewById(R.id.txtQuestion)
@@ -114,6 +126,14 @@ class InterviewStartActivity : AppCompatActivity() {
         tooltipLayout = findViewById(R.id.tooltipLayout)
         btnNextQuestion = findViewById(R.id.btnNextQuestion)
         btnFinalMockInterview = findViewById(R.id.btnFinalMockInterview)
+
+        btnFinalMockInterview.setOnClickListener {
+            val intent = Intent(this, InterviewActivity::class.java)
+
+            intent.putExtra("session_id", sessionId)
+            startActivity(intent)
+
+        }
     }
 
     private fun initSpeechRecognizer() {
@@ -203,12 +223,40 @@ class InterviewStartActivity : AppCompatActivity() {
             txtAnswer.text = "답변을 녹음 중입니다..."
             scrollAnswer.visibility = View.VISIBLE
 
-            // 아이콘을 빨간색으로 변경하여 녹음 중임을 표시
-            btnMic.setColorFilter(android.graphics.Color.parseColor("#FF0000"))
+
+            btnMic.alpha = 0.5f
 
         } catch (e: Exception) {
             android.util.Log.e("AUDIO_ERROR", "녹음 시작 실패", e)
         }
+    }
+
+
+    private fun startAnalyzingUI() {
+        btnMic.visibility = View.GONE
+        layoutDots.visibility = View.GONE
+        txtAnswer.text = ""
+        txtAnalyzing.visibility = View.VISIBLE
+
+
+        val loadingDots = arrayOf(".", "..", "...", "")
+        var count = 0
+        loadingHandler = Handler(Looper.getMainLooper())
+        loadingRunnable = object : Runnable {
+            override fun run() {
+                txtAnalyzing.text = "분석 중${loadingDots[count % 4]}"
+                count++
+                loadingHandler?.postDelayed(this, 500)
+            }
+        }
+        loadingHandler?.post(loadingRunnable!!)
+    }
+
+    private fun stopAnalyzingUI() {
+        loadingHandler?.removeCallbacks(loadingRunnable!!)
+        txtAnalyzing.visibility = View.GONE
+        layoutDots.visibility = View.GONE
+        btnMic.visibility = View.VISIBLE
     }
 
     private fun stopRecording() {
@@ -224,7 +272,7 @@ class InterviewStartActivity : AppCompatActivity() {
         btnMic.clearColorFilter()
         btnMic.visibility = View.INVISIBLE
         layoutDots.visibility = View.VISIBLE
-        txtAnswer.text = "서버에서 답변을 분석 중입니다..."
+
 
         // 바로 서버 전송 시작
         uploadAnswer()
@@ -233,43 +281,44 @@ class InterviewStartActivity : AppCompatActivity() {
     private fun uploadAnswer() {
         val file = audioFile ?: return
 
+        // 3번 요청: 분석 중 애니메이션 및 문구 시작
+        startAnalyzingUI()
+
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // 1. 실제 오디오 파일(.m4a)을 전송용 Body로 생성
+                // 오디오 파일 설정
                 val requestFile = file.asRequestBody("audio/m4a".toMediaTypeOrNull())
                 val filePart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
 
-                // 2. 히스토리 데이터 (서버 명세에 따라 빈 리스트 혹은 실제 데이터 전달)
-                val historyJson = com.google.gson.Gson().toJson(emptyList<Map<String, String>>())
-                val historyBody = okhttp3.RequestBody.create("application/json".toMediaTypeOrNull(), historyJson)
-
-                // 3. 서버 호출
-                val response = RetrofitClient.api.submitAnswer(
-                    questionId = questionId,
-                    sessionId = sessionId,
-                    audioFile = filePart
-                ).execute()
+                // 서버 호출
+                val response = RetrofitClient.api.submitAnswer(questionId, sessionId, filePart).execute()
 
                 withContext(Dispatchers.Main) {
+                    // 분석 종료 시 UI 복구
+                    stopAnalyzingUI()
+
                     if (response.isSuccessful && response.body() != null) {
                         val data = response.body()!!
 
-
+                        // STT 결과 반영
                         txtAnswer.text = data.stt_text
 
-                        // 분석 완료 후 UI 복구: 점점점 숨기고 체크 아이콘 표시
-                        layoutDots.visibility = View.GONE
-                        btnMic.visibility = View.VISIBLE
-                        btnMic.setImageResource(R.drawable.ic_check) // 체크 아이콘으로 변경
 
+                        btnMic.setImageResource(R.drawable.ic_check)
+                        btnMic.alpha = 1.0f
+
+                        // 피드백 표시
                         displayFeedback(data)
+
+
                     } else {
-                        resetUIOnError("분석 실패: ${response.code()}")
+                        resetUIOnError("분석 실패")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    resetUIOnError("네트워크 연결을 확인해 주세요.")
+                    stopAnalyzingUI()
+                    resetUIOnError("네트워크 오류")
                 }
             }
         }
@@ -278,18 +327,32 @@ class InterviewStartActivity : AppCompatActivity() {
         layoutFeedbackResult.visibility = View.VISIBLE
         if (isFirstQuestion) tooltipLayout.visibility = View.VISIBLE
 
-        // XML 구조에 맞게 텍스트 수정
-        val speedCard = findViewById<com.google.android.material.card.MaterialCardView>(R.id.feedbackItem1)
-        val speedValue = (speedCard.getChildAt(0) as LinearLayout).getChildAt(1) as TextView
-        speedValue.text = result.feedback_speed ?: "조금 빠름"
+        // 1. 말하기 속도 (audio_scores -> speed_feedback)
+        val txtSpeedValue = findViewById<TextView>(R.id.txtSpeedValue)
+        txtSpeedValue.text = result.audio_scores?.speed_feedback ?: "분석 데이터 없음"
 
+        // 2. 내용 평가 (feedback -> strength + weakness 합치기)
+        val txtContentValue = findViewById<TextView>(R.id.txtContentValue)
+        val strength = result.feedback?.strength ?: ""
+        val weakness = result.feedback?.weakness ?: ""
+        txtContentValue.text = "$strength\n\n$weakness"
+
+        // 3. 개선 팁 (feedback -> suggestion)
+        val txtTipValue = findViewById<TextView>(R.id.txtTipValue)
+        txtTipValue.text = result.feedback?.suggestion ?: "제공된 팁이 없습니다."
+
+        // 버튼 제어 로직 (기존 유지)
         if (currentQuestionCount >= totalQuestionCount) {
             btnNextQuestion.visibility = View.GONE
             btnFinalMockInterview.visibility = View.VISIBLE
         } else {
             btnNextQuestion.visibility = View.VISIBLE
         }
-        mainScrollView.post { mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top) }
+
+        // 결과 화면으로 자동 스크롤
+        mainScrollView.post {
+            mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top)
+        }
     }
 
     private fun resetUIOnError(message: String) {
@@ -300,12 +363,24 @@ class InterviewStartActivity : AppCompatActivity() {
         txtAnswer.text = "다시 녹음해 주세요."
     }
     private fun resetRecording() {
+
         fullAnswer = ""
         isRecording = false
         isReadyToUpload = false
         txtAnswer.text = ""
+
+
+        isSaved = false
+        updateStarUI()
+
+        isFirstQuestion = false
+        tooltipLayout.visibility = View.GONE
+        btnNextQuestion.visibility = View.GONE // 결과 나오기 전까지는 다음 버튼 숨김
+
+
         btnMic.setImageResource(R.drawable.ic_mic)
         btnMic.visibility = View.VISIBLE
+        btnMic.clearColorFilter()
         btnRefresh.visibility = View.INVISIBLE
         layoutFeedbackResult.visibility = View.GONE
         scrollAnswer.visibility = View.GONE
@@ -314,18 +389,54 @@ class InterviewStartActivity : AppCompatActivity() {
     private fun moveToNextQuestion() {
         if (currentQuestionCount < totalQuestionCount) {
             currentQuestionCount++
+
+
             resetRecording()
+
+
             findViewById<ProgressBar>(R.id.progressQuestion).progress = currentQuestionCount
             findViewById<TextView>(R.id.txtProgress).text = "$currentQuestionCount/$totalQuestionCount"
             mainScrollView.smoothScrollTo(0, 0)
         }
     }
 
+
+
     private fun toggleStarStatus() {
+        // 1. [사용자 경험 개선] 서버 응답 기다리기 전에 먼저 UI부터 바꿉니다.
         isSaved = !isSaved
+        updateStarUI()
+        if (isSaved) tooltipLayout.visibility = View.GONE
+
+        // 2. 서버에 실제 상태 반영 요청
+        RetrofitClient.api.toggleSaveQuestion(questionId).enqueue(object : Callback<Map<String, Any>> {
+            override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
+                if (response.isSuccessful) {
+                    val message = if (isSaved) "질문이 저장되었습니다." else "저장이 취소되었습니다."
+                    Toast.makeText(this@InterviewStartActivity, message, Toast.LENGTH_SHORT).show()
+                } else {
+                    // 서버 저장 실패 시 다시 원래대로 복구
+                    isSaved = !isSaved
+                    updateStarUI()
+                    if (!isSaved) tooltipLayout.visibility = View.VISIBLE
+                    Toast.makeText(this@InterviewStartActivity, "서버 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                // 네트워크 오류 시 복구
+                isSaved = !isSaved
+                updateStarUI()
+                Toast.makeText(this@InterviewStartActivity, "네트워크 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+
+    private fun updateStarUI() {
         imgStar.setImageResource(if (isSaved) R.drawable.ic_star_filled else R.drawable.ic_star_outline)
         imgStar.setColorFilter(if (isSaved) Color.parseColor("#FFD700") else Color.WHITE)
-        if (isSaved) tooltipLayout.visibility = View.GONE
     }
 
     private fun updateUIForRecording() {

@@ -235,15 +235,14 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun uploadAudioAnswer(file: File) {
-        // 💡 1. 서버가 분석 중일 때 내 말풍선에 "분석 중..."이라고 먼저 띄웁니다.
+
         val myBubble: TextView? = currentUserBubble
         myBubble?.text = "답변 분석 중..."
 
         // 대화 내역 누적 (서버 전송용)
         interviewHistory.add(mapOf("role" to "interviewer", "content" to currentQuestionText))
 
-        // 💡 [핵심] 서버가 content가 비어있어서 500 에러를 낸다면, 임시 값을 넣습니다.
-        // 서버는 어차피 오디오 파일을 분석해서 이 값을 덮어쓸 것입니다.
+
         interviewHistory.add(mapOf("role" to "user", "content" to "Voice Answer"))
 
         showTypingAnimation() // 면접관 로딩

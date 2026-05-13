@@ -27,10 +27,18 @@ interface ApiService {
 //질문리스트
     @GET("api/v1/sessions/{session_id}/questions")
     fun getQuestions(
-        @Path("resume_id") resumeId: Int,
+    @Path("session_id") sessionId: Int,
         @Query("count") count: Int,
         @Query("question_types") type: String
     ): Call<List<GeneratedQuestion>>
+
+
+    //질문저장(질문리스트)
+    @PATCH("api/v1/questions/{question_id}")
+    fun toggleSaveQuestion(
+        @Path("question_id") questionId: Int
+    ): Call<Map<String, Any>>
+
 
     // 로그인 (토큰)
     @FormUrlEncoded
@@ -98,11 +106,7 @@ interface ApiService {
         @Path("session_id") sessionId: Int
     ): Call<List<GeneratedQuestion>>
 
-    // 4. 질문 저장하기
-    @PATCH("api/v1/questions/{question_id}")
-    fun toggleSaveQuestion(
-        @Path("question_id") questionId: Int
-    ): Call<Map<String, Any>>
+
 
     // 5. 답변 제출 및 분석
     @Multipart

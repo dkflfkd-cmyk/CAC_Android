@@ -37,21 +37,47 @@ class QuestionSetupActivity : AppCompatActivity() {
     private var selectedResumeId: Int? = null
     private var selectedS3Key: String? = null
 
+    // 상단에 선언된 변수명들을 코드 전체에서 일치시킵니다.
     private lateinit var etJobInput: EditText
     private lateinit var txtType: TextView
     private lateinit var txtCount: TextView
+    private lateinit var btnPickFile: MaterialButton
     private lateinit var fileRow: View
     private lateinit var txtFileName: TextView
     private lateinit var btnRemoveFile: ImageButton
-    private lateinit var btnPickFile: MaterialButton
     private lateinit var cbLoadExisting: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_question_setup)
 
-        findView()
+//        val isRetry = intent.getBooleanExtra("is_retry", false)
+//        val prefs = getSharedPreferences("InterviewPrefs", MODE_PRIVATE)
+//        val lastSessionId = prefs.getInt("last_session_id", -1)
+//
+//        // 자동 이동 로직
+//        if (!isRetry && lastSessionId != -1) {
+//            val intent = Intent(this, QuestionListActivity::class.java).apply {
+//                putExtra("session_id", lastSessionId)
+//                putExtra("job", prefs.getString("last_job", ""))
+//                putExtra("type", prefs.getString("last_type", ""))
+//                putExtra("count", prefs.getInt("last_count", 5))
+//                putExtra("is_from_setup", false)
+//            }
+//            startActivity(intent)
+//            finish()
+//            return
+//        }
+
+        setContentView(R.layout.activity_question_setup)
+        findView() // 변수 초기화
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
         initResumeLogic()
         setupTopBottomButtons()
         setupPickers()
@@ -59,12 +85,6 @@ class QuestionSetupActivity : AppCompatActivity() {
         setupRemoveFileButton()
         setupStartButton()
         setupTitle()
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
     }
 
     private fun findView() {
@@ -78,65 +98,8 @@ class QuestionSetupActivity : AppCompatActivity() {
         cbLoadExisting = findViewById(R.id.cbLoadExisting)
     }
 
-    private fun initResumeLogic() {
-        cbLoadExisting.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                val sharedPref = getSharedPreferences("ResumePrefs", Context.MODE_PRIVATE)
-                val lastId = sharedPref.getInt("last_resume_id", -1)
-
-                if (lastId != -1) {
-                    selectedResumeId = lastId
-                    btnPickFile.isEnabled = false
-                    btnPickFile.alpha = 0.5f
-                    Toast.makeText(this, "최근 분석한 이력서를 사용합니다.", Toast.LENGTH_SHORT).show()
-                } else {
-                    cbLoadExisting.isChecked = false
-                    Toast.makeText(this, "기존 분석 기록이 없습니다.", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                selectedResumeId = null
-                btnPickFile.isEnabled = true
-                btnPickFile.alpha = 1.0f
-            }
-        }
-    }
-
-    private val filePickerLauncher =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri == null) return@registerForActivityResult
-
-            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-            selectedFileUri = uri
-            selectedFileName = queryDisplayName(uri) ?: "이력서 파일"
-            txtFileName.text = selectedFileName
-
-            // 버튼 숨기고 파일 정보 표시 (위치 고정됨)
-            fileRow.visibility = View.VISIBLE
-            btnPickFile.visibility = View.GONE
-            cbLoadExisting.isEnabled = false
-        }
-
-    private fun setupFileButton() {
-        btnPickFile.setOnClickListener {
-            filePickerLauncher.launch(arrayOf("application/pdf"))
-        }
-    }
-
-    private fun setupRemoveFileButton() {
-        btnRemoveFile.setOnClickListener {
-            selectedFileUri = null
-            selectedFileName = null
-            txtFileName.text = ""
-
-            // 다시 버튼 표시하고 파일 정보 숨김
-            fileRow.visibility = View.GONE
-            btnPickFile.visibility = View.VISIBLE
-            cbLoadExisting.isEnabled = true
-        }
-    }
-
     private fun setupStartButton() {
+
         findViewById<View>(R.id.btnStartCircle).setOnClickListener {
             selectedJob = etJobInput.text.toString().trim()
 
@@ -150,6 +113,7 @@ class QuestionSetupActivity : AppCompatActivity() {
                     val sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                     val loginUserId = sharedPref.getString("user_id", "sample04") ?: "sample04"
 
+
                     val request = SessionRequest(
                         user_id = loginUserId,
                         target_job = selectedJob!!,
@@ -158,19 +122,29 @@ class QuestionSetupActivity : AppCompatActivity() {
                         analysis_id = selectedResumeId,
                         pdf_s3_key = selectedS3Key
                     )
+
                     val response = RetrofitClient.api.createSession(request).execute()
 
                     withContext(Dispatchers.Main) {
                         if (response.isSuccessful && response.body() != null) {
-                            val intent = Intent(this@QuestionSetupActivity, QuestionListActivity::class.java)
-                            intent.putExtra("session_id", response.body()!!.sessionId)
+                            val sid = response.body()!!.sessionId
 
+                            getSharedPreferences("InterviewPrefs", MODE_PRIVATE).edit()
+                                .putInt("last_session_id", sid)
+                                .putString("last_job", selectedJob)
+                                .putString("last_type", txtType.text.toString())
+                                .putInt("last_count", selectedCount!!)
+                                .apply()
 
-                            intent.putExtra("job", selectedJob)
-                            intent.putExtra("type", txtType.text.toString())
-                            intent.putExtra("count", selectedCount)
-
+                            val intent = Intent(this@QuestionSetupActivity, QuestionListActivity::class.java).apply {
+                                putExtra("session_id", sid)
+                                putExtra("job", selectedJob)
+                                putExtra("type", txtType.text.toString())
+                                putExtra("count", selectedCount)
+                                putExtra("is_from_setup", true)
+                            }
                             startActivity(intent)
+                            finish()
                         }
                     }
                 } catch (e: Exception) {
@@ -182,10 +156,8 @@ class QuestionSetupActivity : AppCompatActivity() {
         }
     }
 
-
-
-    // 나머지 UI 설정 함수들(setupPickers, setupTitle 등)은 기존과 동일
     private fun setupPickers() {
+
         findViewById<View>(R.id.boxType).setOnClickListener {
             val items = arrayOf("기술 (Technical)", "행동 (Behavioral)", "프로젝트 (Project)", "역량 (Competency)", "산업 (Industry)")
             val serverValues = arrayOf("technical", "behavioral", "project", "competency", "industry")
@@ -202,6 +174,50 @@ class QuestionSetupActivity : AppCompatActivity() {
                 txtCount.text = "${selectedCount}개"
                 txtCount.setTextColor(Color.parseColor("#111111"))
             }.show()
+        }
+    }
+
+
+    private fun initResumeLogic() {
+        cbLoadExisting.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                val sharedPref = getSharedPreferences("ResumePrefs", Context.MODE_PRIVATE)
+                val lastId = sharedPref.getInt("last_resume_id", -1)
+                if (lastId != -1) {
+                    selectedResumeId = lastId
+                    btnPickFile.isEnabled = false
+                    btnPickFile.alpha = 0.5f
+                } else {
+                    cbLoadExisting.isChecked = false
+                    Toast.makeText(this, "기존 기록이 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                selectedResumeId = null
+                btnPickFile.isEnabled = true
+                btnPickFile.alpha = 1.0f
+            }
+        }
+    }
+
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@registerForActivityResult
+        selectedFileUri = uri
+        selectedFileName = queryDisplayName(uri) ?: "이력서 파일"
+        txtFileName.text = selectedFileName
+        fileRow.visibility = View.VISIBLE
+        btnPickFile.visibility = View.GONE
+        cbLoadExisting.isEnabled = false
+    }
+
+    private fun setupFileButton() { btnPickFile.setOnClickListener { filePickerLauncher.launch(arrayOf("application/pdf")) } }
+
+    private fun setupRemoveFileButton() {
+        btnRemoveFile.setOnClickListener {
+            selectedFileUri = null
+            txtFileName.text = ""
+            fileRow.visibility = View.GONE
+            btnPickFile.visibility = View.VISIBLE
+            cbLoadExisting.isEnabled = true
         }
     }
 
