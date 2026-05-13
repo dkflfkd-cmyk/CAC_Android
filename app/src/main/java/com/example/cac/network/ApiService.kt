@@ -131,19 +131,46 @@ interface ApiService {
     @POST("interview/sessions/{session_id}/analyze-speech")
     fun analyzeSpeech(
         @Path("session_id") sessionId: Int,
-        @Header("Authorization") token: String, // 인증이 필요한 경우 추가
+        @Header("Authorization") token: String,
         @Part audioFile: MultipartBody.Part
     ): Call<Map<String, Any>>
 
-//채팅
+
+//[AI 면접 채팅]
+//@Multipart
+//@POST("api/v1/interview/sessions/{session_id}/answer")
+//fun submitInterviewAnswer(
+//    @Path("session_id") sessionId: Int,
+//    @Part audio_file: MultipartBody.Part,
+//    @Part history: MultipartBody.Part,   // RequestBody 대신 Part 사용
+//    @Part question: MultipartBody.Part,  // RequestBody 대신 Part 사용
+//    @Part answer: MultipartBody.Part     // RequestBody 대신 Part 사용
+//): Call<AnswerResponse>
+
+
+
+    @GET("api/v1/interview/sessions/{session_id}/feedback")
+    fun getInterviewFeedback(
+        @Path("session_id") sessionId: Int
+    ): Call<FeedbackResponse>
+
+    @POST("api/v1/resume/{resume_id}/interview/evaluate")
+    fun evaluateInterview(
+        @Path("resume_id") resumeId: Int,
+        @Body body: Map<String, Any>
+    ): Call<AnswerResponse>
 
     @Multipart
-    @POST("api/v1/interview/sessions/{session_id}/answer")
-    fun submitAnswer(
+    @POST("api/v1/interview/sessions/{session_id}/answer-audio")
+    fun submitInterviewAudio(
         @Path("session_id") sessionId: Int,
-        @Part audioFile: MultipartBody.Part,
-        @Part("history") history: okhttp3.RequestBody
-    ): Call<AnswerResponse>
+        @Part audio_file: MultipartBody.Part
+    ): Call<AudioAnswerResponse>
+
+    @POST("api/v1/interview/sessions")
+    fun createInterviewSession(
+        @Body request: InterviewSessionRequest
+    ): Call<SessionResponse>
 
     //답변 제출 및 분석
     @Multipart
@@ -165,16 +192,20 @@ interface ApiService {
 
 
 
-    @GET("api/v1/interview/sessions/{session_id}/feedback")
-    fun getFeedback(
-        @Path("session_id") sessionId: Int
-    ): Call<FeedbackResponse>
-
 }
 
 //채팅
+data class InterviewSessionRequest(
+    val user_id: String,
+    val target_job: String
+)
 
-
+data class AudioAnswerResponse(
+    val stt_text: String,
+    val next_question: String,
+    val question_type: String,
+    val is_finished: Boolean
+)
 
 //질문리스트 받
 data class QuestionResponse(

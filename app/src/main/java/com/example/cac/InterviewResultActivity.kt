@@ -94,7 +94,7 @@ class InterviewResultActivity : AppCompatActivity() {
 
     private fun fetchInterviewFeedback(sessionId: Int) {
 
-        RetrofitClient.api.getFeedback(sessionId).enqueue(object : retrofit2.Callback<FeedbackResponse> {
+        RetrofitClient.api.getInterviewFeedback(sessionId).enqueue(object : retrofit2.Callback<FeedbackResponse> {
             override fun onResponse(call: Call<FeedbackResponse>, response: retrofit2.Response<FeedbackResponse>) {
                 if (response.isSuccessful) {
                     val feedback = response.body()

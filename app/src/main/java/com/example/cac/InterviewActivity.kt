@@ -24,12 +24,16 @@ import com.example.cac.data.SessionResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
+import android.util.Log
+import com.example.cac.network.InterviewSessionRequest
 class InterviewActivity : AppCompatActivity() {
+    private var selectedJob: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_interview)
+
 
         // 챗화면 전환
         val btnStart = findViewById<android.view.View>(R.id.btnStartCircle)
@@ -38,31 +42,44 @@ class InterviewActivity : AppCompatActivity() {
             btnStart.isEnabled = false
 
 
-            val sessionRequest = SessionRequest(
-                user_id = SessionManager.getUserId(this) ?: "",
-                target_job = "개발자",
-                question_count = 10,
-                question_types = listOf("전공", "인성")
+            val userIdStr = SessionManager.getUserId(this) ?: "1"
+            val realUserId = SessionManager.getUserId(this) ?: "1"
+
+
+            val realTargetJob = selectedJob ?: "안드로이드 개발자"
+
+
+            val request = InterviewSessionRequest(
+                user_id = realUserId,
+                target_job = realTargetJob
             )
 
-            RetrofitClient.api.createSession(sessionRequest).enqueue(object : Callback<SessionResponse> {
+
+            RetrofitClient.api.createInterviewSession(request).enqueue(object : Callback<SessionResponse> {
                 override fun onResponse(call: Call<SessionResponse>, response: Response<SessionResponse>) {
                     btnStart.isEnabled = true
                     if (response.isSuccessful && response.body() != null) {
                         val data = response.body()!!
+                        Log.d("SERVER_DATA", "면접 세션 생성 성공: ${data.sessionId}")
 
                         val intent = Intent(this@InterviewActivity, InterviewChatActivity::class.java).apply {
 
                             putExtra("session_id", data.sessionId)
+
+
+                            val firstQuestion = data.firstQuestion ?: "반갑습니다. 면접을 시작해볼까요?"
+                            putExtra("first_question", firstQuestion)
                         }
                         startActivity(intent)
                     } else {
+                        Log.e("API_ERROR", "에러 코드: ${response.code()}")
                         Toast.makeText(this@InterviewActivity, "면접 세션 생성 실패", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
                     btnStart.isEnabled = true
+                    Log.e("API_FAILURE", "통신 실패: ${t.message}")
                     Toast.makeText(this@InterviewActivity, "서버 연결 오류", Toast.LENGTH_SHORT).show()
                 }
             })

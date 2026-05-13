@@ -30,11 +30,14 @@ import retrofit2.Response
 import java.io.File
 import com.example.cac.data.AnswerResponse
 import com.example.cac.data.GeneratedQuestion
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.example.cac.network.AudioAnswerResponse
+
+
+
 
 class InterviewChatActivity : AppCompatActivity() {
 
@@ -70,22 +73,33 @@ class InterviewChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_interview_chat)
 
-        sessionId = intent.getIntExtra("session_id", -1)
-        val firstQuestion = intent.getStringExtra("first_question") ?: "면접을 시작합니다."
-
+        // 1. 뷰 바인딩
         chatContainer = findViewById(R.id.chatContainer)
         chatScrollView = findViewById(R.id.chatScrollView)
         btnRecord = findViewById(R.id.btnRecord)
         btnComplete = findViewById(R.id.btnComplete)
         btnReplay = findViewById(R.id.btnReplay)
-
         findViewById<TextView>(R.id.btnExit).setOnClickListener { finish() }
 
+        // 2. 초기 세팅
         checkPermission()
         fetchUserInfo()
         resetButtonVisibility()
-        simulateInterviewerQuestion(firstQuestion)
 
+        // 3. 데이터 초기화 및 질문 생성 로직
+        sessionId = intent.getIntExtra("session_id", -1)
+
+
+        if (sessionId != -1) {
+            addInterviewerBubble("질문을 생성하고 있습니다. 잠시만 기다려 주세요...")
+            prepareAndFetchQuestions()
+
+        } else {
+
+            addInterviewerBubble("세션 정보를 찾을 수 없습니다.")
+        }
+
+        // 4. 버튼 리스너 세팅
         btnRecord.setOnClickListener {
             when (recordState) {
                 0, 2 -> startRecording()
@@ -98,14 +112,12 @@ class InterviewChatActivity : AppCompatActivity() {
                 Toast.makeText(this, "답변을 녹음해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             Log.d("InterviewTest", "전송할 텍스트: $savedAnswerText")
             uploadAudioAnswer(audioFile!!)
         }
 
         btnReplay.setOnClickListener { reRecord() }
     }
-
     private fun fetchUserInfo() {
         val token = "Bearer ${SessionManager.getToken(this)}"
         RetrofitClient.api.me(token).enqueue(object : Callback<Map<String, Any>> {
@@ -148,22 +160,17 @@ class InterviewChatActivity : AppCompatActivity() {
 
 
     private fun prepareAndFetchQuestions() {
-
-        RetrofitClient.api.generateQuestions(sessionId).enqueue(object : retrofit2.Callback<List<com.example.cac.data.GeneratedQuestion>> {
-            override fun onResponse(
-                call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>,
-                response: retrofit2.Response<List<com.example.cac.data.GeneratedQuestion>>
-            ) {
+        RetrofitClient.api.generateQuestions(sessionId).enqueue(object : Callback<List<GeneratedQuestion>> {
+            override fun onResponse(call: Call<List<GeneratedQuestion>>, response: Response<List<GeneratedQuestion>>) {
                 if (response.isSuccessful) {
 
                     fetchNextQuestionFromServer()
                 } else {
-                    android.util.Log.e("DEBUG_CHAT", "질문 생성 실패: ${response.code()}")
-                    addInterviewerBubble("질문을 생성하지 못했습니다.")
+                    addInterviewerBubble("질문 생성에 실패했습니다. 다시 시도해 주세요.")
                 }
             }
-            override fun onFailure(call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>, t: Throwable) {
-                android.util.Log.e("DEBUG_CHAT", "네트워크 오류: ${t.message}")
+            override fun onFailure(call: Call<List<GeneratedQuestion>>, t: Throwable) {
+                addInterviewerBubble("네트워크 오류가 발생했습니다.")
             }
         })
     }
@@ -235,53 +242,35 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun uploadAudioAnswer(file: File) {
+        // 1. 오디오 파일 생성 (기존과 동일)
+        val requestFile = file.asRequestBody("application/octet-stream".toMediaTypeOrNull())
+        val audioPart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
 
-        val myBubble: TextView? = currentUserBubble
-        myBubble?.text = "답변 분석 중..."
+        // 2. 새로운 API 호출 (텍스트 파트들은 이제 필요 없는지 서버 확인 필요, 일단 오디오만 전송)
+        RetrofitClient.api.submitInterviewAudio(sessionId, audioPart)
+            .enqueue(object : Callback<AudioAnswerResponse> {
+                override fun onResponse(call: Call<AudioAnswerResponse>, response: Response<AudioAnswerResponse>) {
+                    if (response.isSuccessful) {
+                        val body = response.body()
+                        body?.let {
+                            // 사용자의 음성이 텍스트로 변환된 결과 표시
+                            addUserBubble(it.stt_text)
 
-        // 대화 내역 누적 (서버 전송용)
-        interviewHistory.add(mapOf("role" to "interviewer", "content" to currentQuestionText))
-
-
-        interviewHistory.add(mapOf("role" to "user", "content" to "Voice Answer"))
-
-        showTypingAnimation() // 면접관 로딩
-
-        val historyJson = Gson().toJson(interviewHistory)
-        val historyBody = historyJson.toRequestBody("application/json".toMediaTypeOrNull())
-
-        val requestFile = file.asRequestBody("audio/m4a".toMediaTypeOrNull())
-        val body = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
-
-        RetrofitClient.api.submitAnswer(sessionId, body, historyBody)
-            .enqueue(object : Callback<AnswerResponse> {
-                override fun onResponse(call: Call<AnswerResponse>, response: Response<AnswerResponse>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        val data = response.body()!!
-
-                        // 서버에서 변환해준 텍스트를 내 말풍선에 업데이트
-                        myBubble?.text = data.stt_text
-
-                        currentUserBubble = null
-
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            removeTypingAnimation()
-                            if (!data.nextTailQuestion.isNullOrEmpty()) {
-                                addInterviewerBubble(data.nextTailQuestion)
+                            // 다음 면접 질문 표시
+                            if (!it.is_finished) {
+                                addInterviewerBubble(it.next_question)
+                                currentQuestionText = it.next_question
+                            } else {
+                                showDonePanelAnimation() // 면접 종료 처리
                             }
-                        }, 1500)
+                        }
                     } else {
-                        removeTypingAnimation()
-
-                        Log.e("InterviewTest", "Error Code: ${response.code()}")
-                        myBubble?.text = "분석 실패 (에러 코드: ${response.code()})"
+                        Log.e("API_ERROR", "오류 발생: ${response.code()}")
                     }
                 }
 
-                override fun onFailure(call: Call<AnswerResponse>, t: Throwable) {
-                    removeTypingAnimation()
-                    Log.e("InterviewTest", "Fail: ${t.message}")
-                    myBubble?.text = "서버 연결 실패"
+                override fun onFailure(call: Call<AudioAnswerResponse>, t: Throwable) {
+                    Log.e("API_FAILURE", "통신 실패: ${t.message}")
                 }
             })
     }
@@ -371,6 +360,7 @@ class InterviewChatActivity : AppCompatActivity() {
         }
 
         val nameText = TextView(this).apply {
+
             this.text = userName
             textSize = 12f
             setTextColor(Color.parseColor("#888888"))

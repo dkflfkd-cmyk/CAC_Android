@@ -221,26 +221,28 @@ class cardResumeActivity : AppCompatActivity() {
 
         btnAnalyzeCircle.setOnClickListener {
             txtAnalyze.text = "분석중..."
-            txtAnalyze.isEnabled = false
+            btnAnalyzeCircle.isEnabled = false
 
             val uri = selectedUri
             if (uri == null) {
                 Toast.makeText(this, "파일 먼저 선택", Toast.LENGTH_SHORT).show()
+                btnAnalyzeCircle.isEnabled = true
                 return@setOnClickListener
             }
 
-            val token = Session.accessToken
+
+            val token = SessionManager.getToken(this)
+
             if (token.isNullOrBlank()) {
-                Toast.makeText(this, "로그인 필요", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "로그인 정보가 없습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show()
+                btnAnalyzeCircle.isEnabled = true
                 return@setOnClickListener
             }
-
-            hideResultSection()
-            txtResult.text = "업로드 중..."
 
             val bearer = "Bearer $token"
-            val part = uriToMultipart(uri)
+            Log.d("UPLOAD", "사용 토큰: $bearer")
 
+            val part = uriToMultipart(uri)
             RetrofitClient.api.uploadResume(bearer, part)
                 .enqueue(object : Callback<Map<String, Any>> {
                     override fun onResponse(

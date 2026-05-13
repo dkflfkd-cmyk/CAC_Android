@@ -4,5 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class SessionResponse(
     @SerializedName("session_id")
-    val sessionId: Int
+    val sessionId: Int,
+    @SerializedName("first_question")
+    val firstQuestion: String?
 )
