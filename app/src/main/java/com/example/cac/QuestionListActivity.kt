@@ -223,6 +223,8 @@ class QuestionListActivity : AppCompatActivity() {
                                 // 전체 질문 텍스트만 뽑아서 리스트로 전송 (자동 다음 질문용)
                                 val allQuestions = ArrayList(questionItems.map { it.question })
 
+                                val allIds = ArrayList(questionItems.map { it.id })
+                                putIntegerArrayListExtra("question_id_list", allIds)
                                 putStringArrayListExtra("question_list", allQuestions)
                                 putExtra("current_index", clickedIndex)
 

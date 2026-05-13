@@ -14,6 +14,7 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.text.Spannable
 import android.text.SpannableString
+
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
@@ -35,22 +36,29 @@ import java.io.IOException
 import java.util.*
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.example.cac.data.AnswerResponse
-import com.example.cac.data.AudioScores
-import com.example.cac.data.Feedback
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.widget.Toast
+
 class InterviewStartActivity : AppCompatActivity() {
+
 
     private var fullAnswer: String = ""
     private lateinit var mainScrollView: NestedScrollView
     private lateinit var scrollAnswer: NestedScrollView
     private lateinit var btnMic: ImageButton
     private lateinit var micBackground: View
+
+    private var questionIdList: ArrayList<Int> = arrayListOf()
     private lateinit var layoutDots: View
+    private lateinit var dot1: View
+    private lateinit var dot2: View
+    private lateinit var dot3: View
     private lateinit var txtAnswer: TextView
+    private lateinit var txtProgress: TextView
+    private lateinit var progressQuestion: ProgressBar
 
     private lateinit var txtAnalyzing: TextView
     private var loadingHandler: Handler? = null
@@ -74,32 +82,52 @@ class InterviewStartActivity : AppCompatActivity() {
     private var isFirstQuestion = true
     private var sessionId: Int = -1
     private var questionId: Int = -1
-    private var currentQuestionCount = 1
-    private var totalQuestionCount = 3
+
+
+    private var questionList: ArrayList<String> = arrayListOf()
+    private var currentIndex: Int = 0
+    private var totalQuestionCount: Int = 3
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_interview_start)
 
+        // 1. 모든 뷰 연결 (findViewById 실행)
+        initViews()
+
+        // 2. 전달받은 데이터 리스트와 인덱스 읽기
+        questionList = intent.getStringArrayListExtra("question_list") ?: arrayListOf()
+        questionIdList = intent.getIntegerArrayListExtra("question_id_list") ?: arrayListOf()
+        currentIndex = intent.getIntExtra("current_index", 0)
         sessionId = intent.getIntExtra("session_id", -1)
-        questionId = intent.getIntExtra("question_id", -1)
-        android.util.Log.d("FINAL_CHECK", "제출할 질문 ID: $questionId")
-        val questionText = intent.getStringExtra("question_text").orEmpty()
         totalQuestionCount = intent.getIntExtra("count", 3)
 
-        if (questionId == -1) {
-            android.util.Log.e("DATA_CHECK", "question_id를 받지 못했습니다!")
+
+        if (questionIdList.isNotEmpty() && currentIndex < questionIdList.size) {
+            questionId = questionIdList[currentIndex]
+        } else {
+
+            questionId = intent.getIntExtra("question_id", -1)
         }
 
-        initViews()
-        initSpeechRecognizer()
+        // 로그캣에서 ID가 잘 바뀌는지 확인용
+        android.util.Log.d("INTERVIEW_CHECK", "현재 질문 순서: ${currentIndex + 1}, 서버 전송 ID: $questionId")
 
-        txtQuestion.text = questionText
+        // 3. 질문 텍스트 설정
+        if (questionList.isNotEmpty() && currentIndex < questionList.size) {
+            txtQuestion.text = questionList[currentIndex]
+        } else {
+            txtQuestion.text = intent.getStringExtra("question_text").orEmpty()
+        }
 
-        val progressQuestion = findViewById<ProgressBar>(R.id.progressQuestion)
+        // 4. 프로그레스바 및 상단 텍스트(1/3 등) 업데이트
+        val displayNum = currentIndex + 1
         progressQuestion.max = totalQuestionCount
-        progressQuestion.progress = currentQuestionCount
-        findViewById<TextView>(R.id.txtProgress).text = "$currentQuestionCount/$totalQuestionCount"
+        progressQuestion.progress = displayNum
+        txtProgress.text = "$displayNum/$totalQuestionCount"
+
+        // 5. 기능 초기화 및 리스너 등록
+        initSpeechRecognizer()
 
         imgStar.setOnClickListener { toggleStarStatus() }
         btnMic.setOnClickListener { handleMicClick() }
@@ -117,7 +145,12 @@ class InterviewStartActivity : AppCompatActivity() {
         btnMic = findViewById(R.id.btnMic)
         micBackground = findViewById(R.id.micBackground)
         layoutDots = findViewById(R.id.layoutDots)
+        dot1 = findViewById(R.id.dot1)
+        dot2 = findViewById(R.id.dot2)
+        dot3 = findViewById(R.id.dot3)
         txtAnswer = findViewById(R.id.txtAnswer)
+        txtProgress = findViewById(R.id.txtProgress)
+        progressQuestion = findViewById(R.id.progressQuestion)
         txtAnalyzing = findViewById(R.id.txtAnalyzing)
         btnRefresh = findViewById(R.id.btnRefresh)
         layoutFeedbackResult = findViewById(R.id.layoutFeedbackResult)
@@ -129,75 +162,31 @@ class InterviewStartActivity : AppCompatActivity() {
 
         btnFinalMockInterview.setOnClickListener {
             val intent = Intent(this, InterviewActivity::class.java)
-
             intent.putExtra("session_id", sessionId)
             startActivity(intent)
-
         }
     }
 
-    private fun initSpeechRecognizer() {
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREAN)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
 
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000L)
+    private fun moveToNextQuestion() {
+        if (currentIndex + 1 < questionList.size) {
+            val intent = Intent(this, InterviewStartActivity::class.java).apply {
+                putStringArrayListExtra("question_list", questionList)
+                putIntegerArrayListExtra("question_id_list", questionIdList)
+                putExtra("current_index", currentIndex + 1)
+                putExtra("session_id", sessionId)
+                putExtra("count", totalQuestionCount)
+            }
+            startActivity(intent)
+            finish()
+        } else {
+            Toast.makeText(this, "마지막 질문입니다.", Toast.LENGTH_SHORT).show()
         }
-
-        speechRecognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {
-
-                scrollAnswer.visibility = View.VISIBLE
-            }
-
-            override fun onPartialResults(partialResults: Bundle?) {
-                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-
-                    val currentText = matches[0]
-                    txtAnswer.text = if (fullAnswer.isEmpty()) currentText else "$fullAnswer $currentText"
-                    scrollAnswer.post { scrollAnswer.fullScroll(View.FOCUS_DOWN) }
-                }
-            }
-
-            override fun onResults(results: Bundle?) {
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-                    // 한 문장이 확실히 끝났으므로 전체 문장 변수에 저장
-                    fullAnswer = if (fullAnswer.isEmpty()) matches[0] else "$fullAnswer ${matches[0]}"
-                    txtAnswer.text = fullAnswer
-                }
-
-                // 녹음 중이라면(버튼을 아직 안 눌렀다면) 자동으로 다시 듣기 시작
-                if (isRecording) {
-                    speechRecognizer.startListening(recognitionIntent)
-                }
-            }
-
-            override fun onError(error: Int) {
-                // 침묵으로 인해 멈춘 경우 자동으로 다시 듣기 실행
-                if (isRecording) {
-                    speechRecognizer.startListening(recognitionIntent)
-                }
-            }
-
-            override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(rmsdB: Float) {}
-            override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() {}
-            override fun onEvent(eventType: Int, params: Bundle?) {}
-        })
     }
 
     private fun handleMicClick() {
         if (!isRecording && !isReadyToUpload) {
-            if (checkPermissions()) {
-                startRecording()
-            } else {
-                requestPermissions()
-            }
+            if (checkPermissions()) startRecording() else requestPermissions()
         } else if (isRecording) {
             stopRecording()
         } else if (isReadyToUpload) {
@@ -207,38 +196,68 @@ class InterviewStartActivity : AppCompatActivity() {
 
     private fun startRecording() {
         try {
-
             audioFile = File(externalCacheDir, "interview_audio.m4a")
-
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                 setOutputFile(audioFile?.absolutePath)
                 prepare()
-                start() // 실제 녹음 시작
+                start()
             }
-
             isRecording = true
             txtAnswer.text = "답변을 녹음 중입니다..."
             scrollAnswer.visibility = View.VISIBLE
-
-
             btnMic.alpha = 0.5f
+            initSpeechRecognizer()
+            speechRecognizer.startListening(recognitionIntent)
+        } catch (e: Exception) { Log.e("AUDIO", "녹음 시작 실패", e) }
+    }
 
-        } catch (e: Exception) {
-            android.util.Log.e("AUDIO_ERROR", "녹음 시작 실패", e)
+    private fun stopRecording() {
+        try {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+            mediaRecorder = null
+        } catch (e: Exception) { e.printStackTrace() }
+        isRecording = false
+        speechRecognizer.stopListening()
+        btnMic.visibility = View.INVISIBLE
+        layoutDots.visibility = View.VISIBLE
+        uploadAnswer()
+    }
+
+    private fun uploadAnswer() {
+        val file = audioFile ?: return
+        startAnalyzingUI()
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val requestFile = file.asRequestBody("audio/m4a".toMediaTypeOrNull())
+                val filePart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
+                val response = RetrofitClient.api.submitAnswer(questionId, sessionId, filePart).execute()
+
+                withContext(Dispatchers.Main) {
+                    stopAnalyzingUI()
+                    if (response.isSuccessful && response.body() != null) {
+                        val data = response.body()!!
+                        txtAnswer.text = data.stt_text
+                        btnMic.setImageResource(R.drawable.ic_check)
+                        btnMic.visibility = View.VISIBLE
+                        btnMic.alpha = 1.0f
+                        displayFeedback(data)
+                    } else { resetUIOnError("분석 실패") }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { stopAnalyzingUI(); resetUIOnError("네트워크 오류") }
+            }
         }
     }
 
-
     private fun startAnalyzingUI() {
+        txtAnswer.text = ""
         btnMic.visibility = View.GONE
         layoutDots.visibility = View.GONE
-        txtAnswer.text = ""
         txtAnalyzing.visibility = View.VISIBLE
-
-
         val loadingDots = arrayOf(".", "..", "...", "")
         var count = 0
         loadingHandler = Handler(Looper.getMainLooper())
@@ -255,193 +274,82 @@ class InterviewStartActivity : AppCompatActivity() {
     private fun stopAnalyzingUI() {
         loadingHandler?.removeCallbacks(loadingRunnable!!)
         txtAnalyzing.visibility = View.GONE
-        layoutDots.visibility = View.GONE
-        btnMic.visibility = View.VISIBLE
     }
 
-    private fun stopRecording() {
-        try {
-            mediaRecorder?.stop()
-            mediaRecorder?.release()
-            mediaRecorder = null
-        } catch (e: Exception) { e.printStackTrace() }
-
-        isRecording = false
-
-
-        btnMic.clearColorFilter()
-        btnMic.visibility = View.INVISIBLE
-        layoutDots.visibility = View.VISIBLE
-
-
-        // 바로 서버 전송 시작
-        uploadAnswer()
-    }
-
-    private fun uploadAnswer() {
-        val file = audioFile ?: return
-
-        // 3번 요청: 분석 중 애니메이션 및 문구 시작
-        startAnalyzingUI()
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                // 오디오 파일 설정
-                val requestFile = file.asRequestBody("audio/m4a".toMediaTypeOrNull())
-                val filePart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
-
-                // 서버 호출
-                val response = RetrofitClient.api.submitAnswer(questionId, sessionId, filePart).execute()
-
-                withContext(Dispatchers.Main) {
-                    // 분석 종료 시 UI 복구
-                    stopAnalyzingUI()
-
-                    if (response.isSuccessful && response.body() != null) {
-                        val data = response.body()!!
-
-                        // STT 결과 반영
-                        txtAnswer.text = data.stt_text
-
-
-                        btnMic.setImageResource(R.drawable.ic_check)
-                        btnMic.alpha = 1.0f
-
-                        // 피드백 표시
-                        displayFeedback(data)
-
-
-                    } else {
-                        resetUIOnError("분석 실패")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    stopAnalyzingUI()
-                    resetUIOnError("네트워크 오류")
-                }
-            }
-        }
-    }
-    private fun displayFeedback(result: com.example.cac.data.AnswerResponse) {
+    private fun displayFeedback(result: AnswerResponse) {
         layoutFeedbackResult.visibility = View.VISIBLE
-        if (isFirstQuestion) tooltipLayout.visibility = View.VISIBLE
+        findViewById<TextView>(R.id.txtSpeedValue).text = result.audio_scores?.speed_feedback ?: "데이터 없음"
+        findViewById<TextView>(R.id.txtContentValue).text = "${result.feedback?.strength}\n\n${result.feedback?.weakness}"
+        findViewById<TextView>(R.id.txtTipValue).text = result.feedback?.suggestion ?: "팁 없음"
 
-        // 1. 말하기 속도 (audio_scores -> speed_feedback)
-        val txtSpeedValue = findViewById<TextView>(R.id.txtSpeedValue)
-        txtSpeedValue.text = result.audio_scores?.speed_feedback ?: "분석 데이터 없음"
-
-        // 2. 내용 평가 (feedback -> strength + weakness 합치기)
-        val txtContentValue = findViewById<TextView>(R.id.txtContentValue)
-        val strength = result.feedback?.strength ?: ""
-        val weakness = result.feedback?.weakness ?: ""
-        txtContentValue.text = "$strength\n\n$weakness"
-
-        // 3. 개선 팁 (feedback -> suggestion)
-        val txtTipValue = findViewById<TextView>(R.id.txtTipValue)
-        txtTipValue.text = result.feedback?.suggestion ?: "제공된 팁이 없습니다."
-
-        // 버튼 제어 로직 (기존 유지)
-        if (currentQuestionCount >= totalQuestionCount) {
+        if (currentIndex + 1 >= totalQuestionCount) {
             btnNextQuestion.visibility = View.GONE
             btnFinalMockInterview.visibility = View.VISIBLE
         } else {
             btnNextQuestion.visibility = View.VISIBLE
         }
-
-        // 결과 화면으로 자동 스크롤
-        mainScrollView.post {
-            mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top)
-        }
+        mainScrollView.post { mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top) }
     }
 
     private fun resetUIOnError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         layoutDots.visibility = View.GONE
         btnMic.visibility = View.VISIBLE
-        btnMic.setImageResource(R.drawable.ic_mic) // 다시 마이크 아이콘으로
+        btnMic.setImageResource(R.drawable.ic_mic)
         txtAnswer.text = "다시 녹음해 주세요."
     }
-    private fun resetRecording() {
 
+    private fun resetRecording() {
         fullAnswer = ""
         isRecording = false
         isReadyToUpload = false
         txtAnswer.text = ""
-
-
-        isSaved = false
-        updateStarUI()
-
-        isFirstQuestion = false
-        tooltipLayout.visibility = View.GONE
-        btnNextQuestion.visibility = View.GONE // 결과 나오기 전까지는 다음 버튼 숨김
-
-
         btnMic.setImageResource(R.drawable.ic_mic)
         btnMic.visibility = View.VISIBLE
-        btnMic.clearColorFilter()
-        btnRefresh.visibility = View.INVISIBLE
         layoutFeedbackResult.visibility = View.GONE
-        scrollAnswer.visibility = View.GONE
     }
-
-    private fun moveToNextQuestion() {
-        if (currentQuestionCount < totalQuestionCount) {
-            currentQuestionCount++
-
-
-            resetRecording()
-
-
-            findViewById<ProgressBar>(R.id.progressQuestion).progress = currentQuestionCount
-            findViewById<TextView>(R.id.txtProgress).text = "$currentQuestionCount/$totalQuestionCount"
-            mainScrollView.smoothScrollTo(0, 0)
-        }
-    }
-
-
 
     private fun toggleStarStatus() {
-        // 1. [사용자 경험 개선] 서버 응답 기다리기 전에 먼저 UI부터 바꿉니다.
         isSaved = !isSaved
         updateStarUI()
-        if (isSaved) tooltipLayout.visibility = View.GONE
 
-        // 2. 서버에 실제 상태 반영 요청
         RetrofitClient.api.toggleSaveQuestion(questionId).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
-                if (response.isSuccessful) {
-                    val message = if (isSaved) "질문이 저장되었습니다." else "저장이 취소되었습니다."
-                    Toast.makeText(this@InterviewStartActivity, message, Toast.LENGTH_SHORT).show()
-                } else {
-                    // 서버 저장 실패 시 다시 원래대로 복구
-                    isSaved = !isSaved
-                    updateStarUI()
-                    if (!isSaved) tooltipLayout.visibility = View.VISIBLE
-                    Toast.makeText(this@InterviewStartActivity, "서버 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
-                }
+                if (!response.isSuccessful) { isSaved = !isSaved; updateStarUI() }
             }
-
-            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
-                // 네트워크 오류 시 복구
-                isSaved = !isSaved
-                updateStarUI()
-                Toast.makeText(this@InterviewStartActivity, "네트워크 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
-            }
+            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) { isSaved = !isSaved; updateStarUI() }
         })
     }
-
-
 
     private fun updateStarUI() {
         imgStar.setImageResource(if (isSaved) R.drawable.ic_star_filled else R.drawable.ic_star_outline)
         imgStar.setColorFilter(if (isSaved) Color.parseColor("#FFD700") else Color.WHITE)
     }
 
-    private fun updateUIForRecording() {
-        micBackground.alpha = 0.5f
-        txtAnswer.text = "말씀해 주세요..."
+    private fun initSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREAN)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        }
+        speechRecognizer.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {}
+            override fun onPartialResults(partialResults: Bundle?) {
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) txtAnswer.text = matches[0]
+            }
+            override fun onResults(results: Bundle?) {
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) fullAnswer = matches[0]
+            }
+            override fun onError(error: Int) {}
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
     }
 
     private fun checkPermissions() = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -463,12 +371,7 @@ class InterviewStartActivity : AppCompatActivity() {
         val title = findViewById<TextView>(R.id.txtTitle)
         val text = "Career AI Coach"
         val spannable = SpannableString(text)
-        val blue = Color.parseColor("#3950E7")
-        val gray = Color.parseColor("#8A8A8A")
-        spannable.setSpan(ForegroundColorSpan(blue), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        spannable.setSpan(ForegroundColorSpan(gray), 1, 6, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        spannable.setSpan(ForegroundColorSpan(blue), 7, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        spannable.setSpan(ForegroundColorSpan(blue), 10, 11, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(Color.parseColor("#3950E7")), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannable.setSpan(StyleSpan(Typeface.BOLD), 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         title.text = spannable
     }
@@ -478,8 +381,5 @@ class InterviewStartActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btnNoticeh).setOnClickListener { startActivity(Intent(this, MainActivity::class.java)) }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        speechRecognizer.destroy()
-    }
+    override fun onDestroy() { super.onDestroy(); speechRecognizer.destroy() }
 }
