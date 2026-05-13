@@ -51,6 +51,8 @@ class InterviewChatActivity : AppCompatActivity() {
     private var speechRecognizer: SpeechRecognizer? = null
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
+    private var currentProcessingBubble: TextView? = null
+    private var isAnalyzing = false
 
     private var currentUserBubble: TextView? = null
     private var currentUserCard: MaterialCardView? = null
@@ -59,12 +61,14 @@ class InterviewChatActivity : AppCompatActivity() {
     private var typingRunnable: Runnable? = null
     private var typingBubble: View? = null
     private var questionId: Int = 1
-
+    private var isSubmitting = false
     private var currentQuestionText: String = ""
     private val interviewHistory = mutableListOf<Map<String, String>>()
 
     private var savedAnswerText = ""
     private var sessionId: Int = -1
+    private var currentTypingBubble: TextView? = null
+    private var currentTypingCard: MaterialCardView? = null
 
 
     private var userName: String = "사용자"
@@ -89,13 +93,9 @@ class InterviewChatActivity : AppCompatActivity() {
         // 3. 데이터 초기화 및 질문 생성 로직
         sessionId = intent.getIntExtra("session_id", -1)
 
-
         if (sessionId != -1) {
-            addInterviewerBubble("질문을 생성하고 있습니다. 잠시만 기다려 주세요...")
-            prepareAndFetchQuestions()
-
+            addInterviewerBubble("안녕하세요! 지금부터 면접을 시작하려 합니다. 자기소개 부탁드려도 될까요?")
         } else {
-
             addInterviewerBubble("세션 정보를 찾을 수 없습니다.")
         }
 
@@ -107,12 +107,30 @@ class InterviewChatActivity : AppCompatActivity() {
             }
         }
 
+
         btnComplete.setOnClickListener {
+
+            if (recordState == 1) {
+                try {
+                    mediaRecorder?.apply {
+                        stop()
+                        release()
+                    }
+                    mediaRecorder = null
+                    recordState = 2 // 녹음 완료 상태로 전환
+                    (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7")) // 다시 파란색으로
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 파일 존재 확인 후 전송
             if (audioFile == null || !audioFile!!.exists()) {
                 Toast.makeText(this, "답변을 녹음해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            Log.d("InterviewTest", "전송할 텍스트: $savedAnswerText")
+
+            Log.d("InterviewTest", "답변 분석 및 전송 시작")
             uploadAudioAnswer(audioFile!!)
         }
 
@@ -131,34 +149,87 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun startRecording() {
-        if (currentUserBubble == null) addUserBubble("...")
+        isAnalyzing = false
+
+
+        if (currentProcessingBubble == null) {
+            currentProcessingBubble = createEmptyUserBubble()
+        } else {
+            currentProcessingBubble?.text = "."
+        }
+
         recordState = 1
         (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#FF5252"))
+
         startUserTypingAnimation()
 
         try {
 
             audioFile = File(externalCacheDir, "interview_audio.m4a")
+            if (audioFile!!.exists()) {
+                audioFile!!.delete()
+            }
+
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
-
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-
-                setAudioSamplingRate(44100)
-                setAudioEncodingBitRate(96000)
                 setOutputFile(audioFile?.absolutePath)
                 prepare()
                 start()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "녹음 장치 초기화 실패", Toast.LENGTH_SHORT).show()
         }
     }
+    private fun createEmptyUserBubble(): TextView {
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 0, 0, 40)
+            // 전체 레이아웃을 오른쪽으로 밀기
+            gravity = Gravity.END
+        }
 
+        // 유저 이름 설정
+        layout.addView(TextView(this).apply {
+            text = userName
+            textSize = 12f
+            setPadding(0, 0, 10, 8)
 
+            gravity = Gravity.END
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+            }
+        })
 
+        var tv: TextView? = null
+        val card = MaterialCardView(this).apply {
+            radius = 30f
+            setCardBackgroundColor(Color.parseColor("#F0F2FF"))
+            elevation = 0f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+            }
+
+            tv = TextView(context).apply {
+                text = "."
+                setPadding(40, 30, 40, 30)
+                textSize = 15f
+                maxWidth = (resources.displayMetrics.widthPixels * 0.7).toInt()
+            }
+            addView(tv)
+        }
+        layout.addView(card)
+        chatContainer.addView(layout)
+        scrollToBottom()
+        return tv!!
+    }
     private fun prepareAndFetchQuestions() {
         RetrofitClient.api.generateQuestions(sessionId).enqueue(object : Callback<List<GeneratedQuestion>> {
             override fun onResponse(call: Call<List<GeneratedQuestion>>, response: Response<List<GeneratedQuestion>>) {
@@ -176,31 +247,46 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun stopRecording() {
-        recordState = 2
-        (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#4A61ED"))
-        mediaRecorder?.apply {
-            try { stop() } catch(e: Exception) {}
-            release()
-        }
-        mediaRecorder = null
-        speechRecognizer?.stopListening()
-        userTypingRunnable?.let { handler.removeCallbacks(it) }
+        try {
+            mediaRecorder?.apply {
+                stop()
+                release()
+            }
+            mediaRecorder = null
+            recordState = 2
 
-        btnComplete.visibility = View.VISIBLE
-        btnReplay.visibility = View.VISIBLE
+            isAnalyzing = false
+
+
+            (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7"))
+
+
+            resetButtonVisibility()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("RECORD_ERROR", "중지 중 에러: ${e.message}")
+        }
     }
 
     private fun reRecord() {
         recordState = 0
-        speechRecognizer?.destroy()
-        speechRecognizer = null
-        mediaRecorder?.release()
-        mediaRecorder = null
-        userTypingRunnable?.let { handler.removeCallbacks(it) }
+        isAnalyzing = false
 
-        savedAnswerText = ""
-        currentUserBubble?.text = "..."
+        mediaRecorder?.apply {
+            try { stop() } catch (e: Exception) {}
+            release()
+        }
+        mediaRecorder = null
+
+        // 애니메이션 멈추고 텍스트 초기화
+        userTypingRunnable?.let { handler.removeCallbacks(it) }
+        currentProcessingBubble?.text = "."
+
+
         resetButtonVisibility()
+
+
         startRecording()
     }
 
@@ -242,35 +328,52 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun uploadAudioAnswer(file: File) {
-        // 1. 오디오 파일 생성 (기존과 동일)
+        if (isSubmitting) return
+        isSubmitting = true
+
+
+        isAnalyzing = true
+        startUserTypingAnimation()
+
+
+
         val requestFile = file.asRequestBody("application/octet-stream".toMediaTypeOrNull())
         val audioPart = MultipartBody.Part.createFormData("audio_file", file.name, requestFile)
 
-        // 2. 새로운 API 호출 (텍스트 파트들은 이제 필요 없는지 서버 확인 필요, 일단 오디오만 전송)
         RetrofitClient.api.submitInterviewAudio(sessionId, audioPart)
             .enqueue(object : Callback<AudioAnswerResponse> {
                 override fun onResponse(call: Call<AudioAnswerResponse>, response: Response<AudioAnswerResponse>) {
-                    if (response.isSuccessful) {
-                        val body = response.body()
-                        body?.let {
-                            // 사용자의 음성이 텍스트로 변환된 결과 표시
-                            addUserBubble(it.stt_text)
+                    isSubmitting = false
+                    isAnalyzing = false
 
-                            // 다음 면접 질문 표시
-                            if (!it.is_finished) {
-                                addInterviewerBubble(it.next_question)
-                                currentQuestionText = it.next_question
+                    if (response.isSuccessful && response.body() != null) {
+                        val body = response.body()!!
+
+
+                        currentProcessingBubble?.text = body.stt_text
+                        currentProcessingBubble = null
+
+
+                        showTypingAnimation()
+
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            removeTypingAnimation() // "..." 제거
+                            if (!body.is_finished) {
+                                addInterviewerBubble(body.next_question)
+                                resetButtonVisibility()
+                                recordState = 0
                             } else {
-                                showDonePanelAnimation() // 면접 종료 처리
+                                showDonePanelAnimation()
                             }
-                        }
-                    } else {
-                        Log.e("API_ERROR", "오류 발생: ${response.code()}")
+                        }, 1500)
                     }
                 }
 
                 override fun onFailure(call: Call<AudioAnswerResponse>, t: Throwable) {
-                    Log.e("API_FAILURE", "통신 실패: ${t.message}")
+                    isSubmitting = false
+                    isAnalyzing = false
+                    removeTypingAnimation()
+                    currentProcessingBubble?.text = "(분석 실패)"
                 }
             })
     }
@@ -405,24 +508,19 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun startUserTypingAnimation() {
-        var dot = 1
-
-        currentUserCard?.layoutParams?.width = LinearLayout.LayoutParams.WRAP_CONTENT
-
-        userTypingRunnable = object : Runnable {
+        val runnable = object : Runnable {
             override fun run() {
 
-                if (recordState != 1) return
+                if (recordState != 1 && !isAnalyzing) return
+                if (currentProcessingBubble == null) return
 
-                dot = (dot % 3) + 1
-                currentUserBubble?.text = ".".repeat(dot)
+                val dots = ".".repeat((System.currentTimeMillis() / 500 % 3).toInt() + 1)
+                currentProcessingBubble?.text = if (isAnalyzing) "분석 중$dots" else dots
 
-
-                currentUserCard?.requestLayout()
                 handler.postDelayed(this, 500)
             }
         }
-        handler.post(userTypingRunnable!!)
+        handler.post(runnable)
     }
 
     private fun simulateInterviewerQuestion(text: String) {
@@ -466,8 +564,23 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun resetButtonVisibility() {
-        btnReplay.visibility = View.INVISIBLE
-        btnComplete.visibility = View.INVISIBLE
+        when (recordState) {
+            0 -> { // 초기 상태
+                btnRecord.visibility = View.VISIBLE
+                btnComplete.visibility = View.GONE
+                btnReplay.visibility = View.GONE
+            }
+            1 -> { // 녹음 중
+                btnRecord.visibility = View.VISIBLE
+                btnComplete.visibility = View.GONE
+                btnReplay.visibility = View.GONE
+            }
+            2 -> { // 중지 상태
+                btnRecord.visibility = View.VISIBLE
+                btnReplay.visibility = View.VISIBLE
+                btnComplete.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun scrollToBottom() { chatScrollView.post { chatScrollView.fullScroll(ScrollView.FOCUS_DOWN) } }
