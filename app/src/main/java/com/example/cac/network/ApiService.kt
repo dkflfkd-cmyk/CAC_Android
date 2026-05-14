@@ -6,7 +6,7 @@ import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
-
+import com.google.gson.annotations.SerializedName
 interface ApiService {
 
     @POST("auth/signup")
@@ -113,7 +113,7 @@ interface ApiService {
 
     // 면접 이력 조회
     @GET("api/v1/interview/users/{user_id}/history")
-    fun getInterviewHistory(@Path("user_id") userId: String): Call<List<InterviewHistoryItem>>
+    fun getInterviewHistory(@Path("user_id") userId: String): Call<InterviewHistoryResponse>
 
     // 세션 분석 상세 조회
     @GET("api/v1/interview/sessions/{session_id}/analysis")
@@ -135,17 +135,21 @@ data class InterviewResultData(
     val overall_score: Double,
     val competency_scores: Map<String, Int>,
     val competency_comments: Map<String, String>,
-    val question_feedbacks: List<InterviewQuestionFeedback>
+    val question_feedbacks: List<InterviewQuestionFeedback>,
+    val strengths: List<String>?,
+    val improvements: List<String>?
 )
 
 data class InterviewQuestionFeedback(
     val question: String,
     val feedback: String,
     val score: Int,
+    val answer_summary: String?,
     val analysis: SpeechDetailResponse?
 )
 
 data class SpeechDetailResponse(
+
     val speech_rate: Double,
     val filler_words_count: Int,
     val silence_duration: Double,
@@ -155,7 +159,15 @@ data class SpeechDetailResponse(
 data class InterviewHistoryItem(
     val session_id: Int,
     val date: String,
+    @SerializedName("score")
     val overall_score: Double
+)
+
+data class InterviewHistoryResponse(
+    val history: List<InterviewHistoryItem>,
+    val total_count: Int,
+    val growth_rate: Double,
+    val score: Int
 )
 
 data class InterviewSessionRequest(

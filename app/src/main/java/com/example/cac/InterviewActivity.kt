@@ -41,13 +41,15 @@ class InterviewActivity : AppCompatActivity() {
         btnStart.setOnClickListener {
             btnStart.isEnabled = false
 
-
-            val userIdStr = SessionManager.getUserId(this) ?: "1"
             val realUserId = SessionManager.getUserId(this) ?: "1"
-
-
             val realTargetJob = selectedJob ?: "안드로이드 개발자"
 
+
+            val sharedPref = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putString("USER_ID", realUserId)
+                apply()
+            }
 
             val request = InterviewSessionRequest(
                 user_id = realUserId,
@@ -60,26 +62,23 @@ class InterviewActivity : AppCompatActivity() {
                     btnStart.isEnabled = true
                     if (response.isSuccessful && response.body() != null) {
                         val data = response.body()!!
-                        Log.d("SERVER_DATA", "면접 세션 생성 성공: ${data.sessionId}")
+                        android.util.Log.d("SERVER_DATA", "면접 세션 생성 성공: ${data.sessionId}")
 
                         val intent = Intent(this@InterviewActivity, InterviewChatActivity::class.java).apply {
-
                             putExtra("session_id", data.sessionId)
-
-
                             val firstQuestion = data.firstQuestion ?: "반갑습니다. 면접을 시작해볼까요?"
                             putExtra("first_question", firstQuestion)
                         }
                         startActivity(intent)
                     } else {
-                        Log.e("API_ERROR", "에러 코드: ${response.code()}")
+                        android.util.Log.e("API_ERROR", "에러 코드: ${response.code()}")
                         Toast.makeText(this@InterviewActivity, "면접 세션 생성 실패", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
                     btnStart.isEnabled = true
-                    Log.e("API_FAILURE", "통신 실패: ${t.message}")
+                    android.util.Log.e("API_FAILURE", "통신 실패: ${t.message}")
                     Toast.makeText(this@InterviewActivity, "서버 연결 오류", Toast.LENGTH_SHORT).show()
                 }
             })
