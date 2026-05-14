@@ -28,6 +28,9 @@
         <activity android:name=".InterviewStartActivity"
             android:exported="false"/>
 
+        <activity android:name=".cardRoadmapActivity"
+            android:exported="false" />
+
         <activity
             android:name=".QuestionListActivity"
             android:exported="false"
@@ -62,10 +65,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-        <activity
-            android:name=".cardRoadmapActivity"
-            android:exported="false"
-            />
+
         <activity
             android:name=".cardResumeActivity"
             android:exported="false"
