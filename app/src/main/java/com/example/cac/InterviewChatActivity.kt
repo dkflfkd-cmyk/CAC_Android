@@ -3,17 +3,16 @@ package com.example.cac
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.Log
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import android.view.Gravity
 import android.view.View
+import com.google.gson.Gson
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Build
@@ -24,21 +23,12 @@ import com.google.android.material.card.MaterialCardView
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
-import com.example.cac.data.AnswerResponse
 import com.example.cac.data.GeneratedQuestion
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.example.cac.network.AudioAnswerResponse
-
-
-
 
 class InterviewChatActivity : AppCompatActivity() {
 
@@ -49,14 +39,11 @@ class InterviewChatActivity : AppCompatActivity() {
     private lateinit var btnReplay: View
 
     private var recordState = 0 // 0:대기, 1:녹음중, 2:중단됨
-    private var speechRecognizer: SpeechRecognizer? = null
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
     private var currentProcessingBubble: TextView? = null
     private var isAnalyzing = false
 
-    private var currentUserBubble: TextView? = null
-    private var currentUserCard: MaterialCardView? = null
     private val handler = Handler(Looper.getMainLooper())
     private var userTypingRunnable: Runnable? = null
     private var typingRunnable: Runnable? = null
@@ -64,14 +51,8 @@ class InterviewChatActivity : AppCompatActivity() {
     private var questionId: Int = 1
     private var isSubmitting = false
     private var currentQuestionText: String = ""
-    private val interviewHistory = mutableListOf<Map<String, String>>()
 
-    private var savedAnswerText = ""
     private var sessionId: Int = -1
-    private var currentTypingBubble: TextView? = null
-    private var currentTypingCard: MaterialCardView? = null
-
-
     private var userName: String = "사용자"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,8 +67,8 @@ class InterviewChatActivity : AppCompatActivity() {
         btnReplay = findViewById(R.id.btnReplay)
         findViewById<TextView>(R.id.btnExit).setOnClickListener { finish() }
 
-        // 2. 초기 세팅
-        checkPermission()
+        // 2. 초기 세팅 (이름 변경으로 충돌 해결)
+        checkAudioPermission()
         fetchUserInfo()
         resetButtonVisibility()
 
@@ -121,7 +102,8 @@ class InterviewChatActivity : AppCompatActivity() {
                 }
             }
 
-            // 파일 체크 후 토스트 메시지
+            Log.d("AudioPathCheck", "실제 녹음 파일의 전체 주소: ${audioFile?.absolutePath}")
+
             if (audioFile == null || !audioFile!!.exists() || audioFile!!.length() <= 0L) {
                 Toast.makeText(this, "답변을 녹음해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -131,7 +113,6 @@ class InterviewChatActivity : AppCompatActivity() {
         }
 
         btnReplay.setOnClickListener {
-            // 녹음된 파일이 없으면 토스트 메시지
             if (audioFile == null || !audioFile!!.exists() || audioFile!!.length() <= 0L) {
                 Toast.makeText(this, "답변을 녹음해주세요.", Toast.LENGTH_SHORT).show()
             } else {
@@ -139,6 +120,7 @@ class InterviewChatActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun fetchUserInfo() {
         val token = "Bearer ${SessionManager.getToken(this)}"
         RetrofitClient.api.me(token).enqueue(object : Callback<Map<String, Any>> {
@@ -154,25 +136,22 @@ class InterviewChatActivity : AppCompatActivity() {
     private fun startRecording() {
         isAnalyzing = false
 
-        // 말풍선 유지 로직
         if (currentProcessingBubble == null) {
             currentProcessingBubble = createEmptyUserBubble()
         }
 
-
         if (recordState == 2 && mediaRecorder != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mediaRecorder?.resume() // 이어서 시작
+                mediaRecorder?.resume()
                 recordState = 1
-                (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#FF5252"))
+                btnRecord.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FF5252"))
                 startUserTypingAnimation()
                 return
             }
         }
 
-
         recordState = 1
-        (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#FF5252"))
+        btnRecord.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FF5252"))
         startUserTypingAnimation()
 
         try {
@@ -185,22 +164,22 @@ class InterviewChatActivity : AppCompatActivity() {
                 prepare()
                 start()
             }
-        } catch (e: Exception) { e.printStackTrace() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
+
     private fun createEmptyUserBubble(): TextView {
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, 0, 0, 40)
-            // 전체 레이아웃을 오른쪽으로 밀기
             gravity = Gravity.END
         }
 
-        // 유저 이름 설정
         layout.addView(TextView(this).apply {
             text = userName
             textSize = 12f
             setPadding(0, 0, 10, 8)
-
             gravity = Gravity.END
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -235,11 +214,11 @@ class InterviewChatActivity : AppCompatActivity() {
         scrollToBottom()
         return tv!!
     }
+
     private fun prepareAndFetchQuestions() {
         RetrofitClient.api.generateQuestions(sessionId).enqueue(object : Callback<List<GeneratedQuestion>> {
             override fun onResponse(call: Call<List<GeneratedQuestion>>, response: Response<List<GeneratedQuestion>>) {
                 if (response.isSuccessful) {
-
                     fetchNextQuestionFromServer()
                 } else {
                     addInterviewerBubble("질문 생성에 실패했습니다. 다시 시도해 주세요.")
@@ -252,27 +231,21 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun stopRecording() {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
-                mediaRecorder?.pause() // 일시정지
-                recordState = 2 // 일시정지 상태로 변경
-
+                mediaRecorder?.pause()
+                recordState = 2
                 isAnalyzing = false
-                (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7"))
+                btnRecord.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#3950E7"))
                 resetButtonVisibility()
-
             } catch (e: Exception) {
                 e.printStackTrace()
-                // pause 도중 에러나면 그냥 완전히 멈추도록 처리
                 finishRecordingCompletely()
             }
         } else {
-
             finishRecordingCompletely()
         }
     }
-
 
     private fun finishRecordingCompletely() {
         try {
@@ -283,7 +256,7 @@ class InterviewChatActivity : AppCompatActivity() {
             mediaRecorder = null
             recordState = 2
             isAnalyzing = false
-            (btnRecord as MaterialCardView).setCardBackgroundColor(Color.parseColor("#3950E7"))
+            btnRecord.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#3950E7"))
             resetButtonVisibility()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -300,52 +273,11 @@ class InterviewChatActivity : AppCompatActivity() {
         }
         mediaRecorder = null
 
-        // 애니메이션 멈추고 텍스트 초기화
         userTypingRunnable?.let { handler.removeCallbacks(it) }
         currentProcessingBubble?.text = "."
 
-
         resetButtonVisibility()
-
-
         startRecording()
-    }
-
-    private fun startSTT() {
-        val sttIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        }
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this).apply {
-            setRecognitionListener(object : RecognitionListener {
-                override fun onResults(results: Bundle?) {
-                    val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    if (!matches.isNullOrEmpty()) {
-                        val newText = matches[0]
-                        savedAnswerText = if (savedAnswerText.isEmpty()) newText else "$savedAnswerText $newText"
-                        currentUserBubble?.text = savedAnswerText
-                    }
-                    if (recordState == 1) startListening(sttIntent)
-                }
-                override fun onPartialResults(results: Bundle?) {
-                    val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    if (!matches.isNullOrEmpty()) {
-                        handler.removeCallbacks(userTypingRunnable!!)
-                        val partialText = matches[0]
-                        currentUserBubble?.text = if (savedAnswerText.isEmpty()) partialText else "$savedAnswerText $partialText"
-                    }
-                }
-                override fun onError(error: Int) { if (recordState == 1) startListening(sttIntent) }
-                override fun onReadyForSpeech(params: Bundle?) {}
-                override fun onBeginningOfSpeech() {}
-                override fun onRmsChanged(rmsdB: Float) {}
-                override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {}
-                override fun onEvent(eventType: Int, params: Bundle?) {}
-            })
-            startListening(sttIntent)
-        }
     }
 
     private fun uploadAudioAnswer(file: File) {
@@ -368,12 +300,11 @@ class InterviewChatActivity : AppCompatActivity() {
                         currentProcessingBubble?.text = body.stt_text
                         currentProcessingBubble = null
 
-
                         recordState = 0
                         resetButtonVisibility()
 
                         showTypingAnimation()
-                        Handler(Looper.getMainLooper()).postDelayed({
+                        handler.postDelayed({
                             removeTypingAnimation()
                             if (!body.is_finished) {
                                 addInterviewerBubble(body.next_question)
@@ -381,46 +312,47 @@ class InterviewChatActivity : AppCompatActivity() {
                                 showDonePanelAnimation()
                             }
                         }, 1500)
+                    } else {
+                        handleUploadFailure()
                     }
                 }
 
                 override fun onFailure(call: Call<AudioAnswerResponse>, t: Throwable) {
-                    isSubmitting = false
-                    isAnalyzing = false
-                    recordState = 0
-                    resetButtonVisibility()
-                    removeTypingAnimation()
-                    currentProcessingBubble?.text = "(분석 실패)"
+                    handleUploadFailure()
                 }
             })
     }
+
+    private fun handleUploadFailure() {
+        isSubmitting = false
+        isAnalyzing = false
+        recordState = 2
+        resetButtonVisibility()
+        removeTypingAnimation()
+        currentProcessingBubble?.text = "(분석 실패 - 다시 시도해주세요)"
+    }
+
     private fun fetchNextQuestionFromServer() {
         showTypingAnimation()
 
-        RetrofitClient.api.getQuestions(sessionId).enqueue(object : retrofit2.Callback<List<com.example.cac.data.GeneratedQuestion>> {
-            override fun onResponse(
-                call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>,
-                response: retrofit2.Response<List<com.example.cac.data.GeneratedQuestion>>
-            ) {
+        RetrofitClient.api.getQuestions(sessionId).enqueue(object : Callback<List<GeneratedQuestion>> {
+            override fun onResponse(call: Call<List<GeneratedQuestion>>, response: Response<List<GeneratedQuestion>>) {
                 removeTypingAnimation()
 
                 if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                     val questions = response.body()!!
-
-
                     val nextQuestionData = questions.find { it.order_num == questionId }
-                        ?: questions.firstOrNull() // 못찾으면 첫번째꺼라도
+                        ?: questions.firstOrNull()
 
                     if (nextQuestionData != null) {
                         addInterviewerBubble(nextQuestionData.question_text)
-
                     } else {
                         addInterviewerBubble("준비된 모든 질문이 끝났습니다. 수고하셨습니다!")
                     }
                 }
             }
 
-            override fun onFailure(call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>, t: Throwable) {
+            override fun onFailure(call: Call<List<GeneratedQuestion>>, t: Throwable) {
                 removeTypingAnimation()
                 addInterviewerBubble("네트워크 오류로 다음 질문을 가져오지 못했습니다.")
             }
@@ -454,7 +386,7 @@ class InterviewChatActivity : AppCompatActivity() {
             strokeWidth = 2
             elevation = 0f
             val tv = TextView(context).apply {
-                this.text = text // 파라미터로 받은 질문 텍스트 삽입
+                this.text = text
                 setPadding(40, 30, 40, 30)
                 setTextColor(Color.parseColor("#333333"))
                 textSize = 15f
@@ -463,8 +395,6 @@ class InterviewChatActivity : AppCompatActivity() {
             addView(tv)
         }
 
-
-
         textLayout.addView(card)
         layout.addView(profileImg)
         layout.addView(textLayout)
@@ -472,62 +402,11 @@ class InterviewChatActivity : AppCompatActivity() {
         scrollToBottom()
     }
 
-    private fun addUserBubble(text: String): TextView {
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 0, 0, 40)
-            gravity = Gravity.END
-        }
-
-        val nameText = TextView(this).apply {
-
-            this.text = userName
-            textSize = 12f
-            setTextColor(Color.parseColor("#888888"))
-            setPadding(0, 0, 10, 8)
-            gravity = Gravity.END
-        }
-
-        var targetTv: TextView? = null // 리턴할 변수
-
-        val card = MaterialCardView(this).apply {
-            radius = 30f
-            setCardBackgroundColor(Color.parseColor("#F0F2FF"))
-            strokeColor = Color.parseColor("#BDC5F3")
-            strokeWidth = 2
-            elevation = 0f
-
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.END
-            }
-
-            val tv = TextView(context).apply {
-                this.text = text
-                setPadding(45, 30, 45, 30)
-                setTextColor(Color.parseColor("#333333"))
-                textSize = 15f
-                maxWidth = (resources.displayMetrics.widthPixels * 0.75).toInt()
-                targetTv = this
-            }
-            addView(tv)
-        }
-
-        layout.addView(nameText)
-        layout.addView(card)
-        chatContainer.addView(layout)
-        scrollToBottom()
-
-        currentUserBubble = targetTv
-        return targetTv!!
-    }
-
     private fun startUserTypingAnimation() {
-        val runnable = object : Runnable {
-            override fun run() {
+        userTypingRunnable?.let { handler.removeCallbacks(it) }
 
+        userTypingRunnable = object : Runnable {
+            override fun run() {
                 if (recordState != 1 && !isAnalyzing) return
                 if (currentProcessingBubble == null) return
 
@@ -537,15 +416,7 @@ class InterviewChatActivity : AppCompatActivity() {
                 handler.postDelayed(this, 500)
             }
         }
-        handler.post(runnable)
-    }
-
-    private fun simulateInterviewerQuestion(text: String) {
-        showTypingAnimation()
-        handler.postDelayed({
-            removeTypingAnimation()
-            addInterviewerBubble(text)
-        }, 1500)
+        handler.post(userTypingRunnable!!)
     }
 
     private fun showTypingAnimation() {
@@ -563,6 +434,7 @@ class InterviewChatActivity : AppCompatActivity() {
         chatContainer.addView(layout)
         typingBubble = layout
         scrollToBottom()
+
         var dot = 1
         typingRunnable = object : Runnable {
             override fun run() {
@@ -582,17 +454,12 @@ class InterviewChatActivity : AppCompatActivity() {
 
     private fun resetButtonVisibility() {
         when (recordState) {
-            0 -> { // 초기 상태: 녹음 버튼만 보임
+            0, 1 -> {
                 btnRecord.visibility = View.VISIBLE
                 btnComplete.visibility = View.GONE
                 btnReplay.visibility = View.GONE
             }
-            1 -> { // 녹음 중: 녹음 버튼만 보임
-                btnRecord.visibility = View.VISIBLE
-                btnComplete.visibility = View.GONE
-                btnReplay.visibility = View.GONE
-            }
-            2 -> { // 녹음 멈춤: 이때만 3개 버튼이 다 보임
+            2 -> {
                 btnRecord.visibility = View.VISIBLE
                 btnReplay.visibility = View.VISIBLE
                 btnComplete.visibility = View.VISIBLE
@@ -600,29 +467,120 @@ class InterviewChatActivity : AppCompatActivity() {
         }
     }
 
-    private fun scrollToBottom() { chatScrollView.post { chatScrollView.fullScroll(ScrollView.FOCUS_DOWN) } }
+    private fun scrollToBottom() {
+        chatScrollView.post { chatScrollView.fullScroll(ScrollView.FOCUS_DOWN) }
+    }
 
     private fun showDonePanelAnimation() {
         val donePanel = findViewById<LinearLayout>(R.id.layoutDonePanel)
+        val txtStatus = findViewById<TextView>(R.id.txtDoneStatus)
 
-        donePanel.visibility = View.VISIBLE
-        donePanel.alpha = 0.0f // 처음에 투명하게
 
-        donePanel.animate()
-            .alpha(1.0f) // 선명하게
-            .setDuration(1500) // 1.5초 동안
-            .withEndAction {
-                // 애니메이션이 끝나고 2초 뒤에 결과 화면으로 이동
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val intent = Intent(this@InterviewChatActivity, InterviewResultActivity::class.java)
-                    intent.putExtra("session_id", sessionId)
-                    startActivity(intent)
-                    finish()
-                }, 2000)
+        donePanel?.visibility = View.VISIBLE
+        donePanel?.alpha = 0.0f
+
+        donePanel?.animate()
+            ?.alpha(1.0f)
+            ?.setDuration(1500)
+            ?.withEndAction {
+                txtStatus?.text = "AI가 음성 발화를 정밀 분석 중입니다...\n잠시만 기다려 주세요."
+                requestSpeechAnalysisAndNavigate(sessionId)
             }
-            .start()
+            ?.start()
     }
-    private fun checkPermission() {
+
+    private fun requestSpeechAnalysisAndNavigate(sessionId: Int) {
+        val audioFile = File(externalCacheDir, "interview_audio.m4a")
+
+        val audioMultipart: MultipartBody.Part = if (audioFile.exists() && audioFile.length() > 0) {
+            val requestBody = audioFile.asRequestBody("audio/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("file", audioFile.name, requestBody)
+        } else {
+            navigateToResultActivity(sessionId)
+            return
+        }
+
+
+        RetrofitClient.api.analyzeSpeech(sessionId, audioMultipart).enqueue(object : Callback<com.example.cac.network.SpeechAnalysisResponse> {
+
+
+            override fun onResponse(
+                call: Call<com.example.cac.network.SpeechAnalysisResponse>,
+                response: Response<com.example.cac.network.SpeechAnalysisResponse>
+            ) {
+                var speechAnalysisJson: String? = null
+
+                if (response.isSuccessful && response.body() != null) {
+                    Log.d("SpeechAnalysis", "발화 분석 완료 성공! 이어서 피드백 생성 여부 체크 시작")
+                    speechAnalysisJson = com.google.gson.Gson().toJson(response.body())
+                } else {
+                    Log.e("SpeechAnalysis", "발화 분석 서버 에러 발생 코드: ${response.code()}")
+                }
+
+                checkFeedbackReadyAndNavigate(sessionId, speechAnalysisJson)
+            }
+
+
+            override fun onFailure(call: Call<com.example.cac.network.SpeechAnalysisResponse>, t: Throwable) {
+                Log.e("SpeechAnalysis", "발화 분석 네트워크 통신 실패 원인: ${t.message}")
+                checkFeedbackReadyAndNavigate(sessionId, null)
+            }
+        })
+    }
+
+    private fun checkFeedbackReadyAndNavigate(sessionId: Int, speechAnalysisJson: String?) { // ◀ 파라미터 추가
+        RetrofitClient.api.getInterviewFeedback(sessionId).enqueue(object : Callback<com.example.cac.network.InterviewResultResponse> {
+            override fun onResponse(call: Call<com.example.cac.network.InterviewResultResponse>, response: Response<com.example.cac.network.InterviewResultResponse>) {
+                val body = response.body()
+
+                if (response.isSuccessful && body != null &&
+                    !body.feedback.question_feedbacks.isNullOrEmpty()) {
+
+                    Log.d("InterviewWait", "피드백 데이터 확인 완료! 결과 화면으로 이동합니다.")
+
+
+                    val feedbackJson = com.google.gson.Gson().toJson(body)
+
+
+                    navigateToResultActivity(sessionId, feedbackJson, speechAnalysisJson)
+                } else {
+                    Log.d("InterviewWait", "데이터가 아직 불완전함(AI 생성 중). 2초 뒤 재시도...")
+                    Handler(Looper.getMainLooper()).postDelayed({
+
+                        checkFeedbackReadyAndNavigate(sessionId, speechAnalysisJson)
+                    }, 2000)
+                }
+            }
+
+            override fun onFailure(call: Call<com.example.cac.network.InterviewResultResponse>, t: Throwable) {
+                Log.e("InterviewWait", "네트워크 통신 실패: ${t.message}")
+
+                navigateToResultActivity(sessionId, null, speechAnalysisJson)
+            }
+        })
+    }
+
+    private fun navigateToResultActivity(
+        sessionId: Int,
+        feedbackJson: String? = null,
+        speechAnalysisJson: String? = null
+    ) {
+        val intent = Intent(this@InterviewChatActivity, InterviewResultActivity::class.java)
+        intent.putExtra("session_id", sessionId)
+
+
+        if (!feedbackJson.isNullOrBlank()) {
+            intent.putExtra("interview_result_json", feedbackJson)
+        }
+        if (!speechAnalysisJson.isNullOrBlank()) {
+            intent.putExtra("speech_analysis_json", speechAnalysisJson)
+        }
+
+        startActivity(intent)
+        finish()
+    }
+
+    private fun checkAudioPermission() {
         val permissions = arrayOf(Manifest.permission.RECORD_AUDIO)
         val notGranted = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
@@ -637,5 +595,18 @@ class InterviewChatActivity : AppCompatActivity() {
         if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "마이크 권한 승인", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        userTypingRunnable?.let { handler.removeCallbacks(it) }
+        typingRunnable?.let { handler.removeCallbacks(it) }
+
+        try {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+        } catch (e: Exception) {
+        }
+        mediaRecorder = null
     }
 }

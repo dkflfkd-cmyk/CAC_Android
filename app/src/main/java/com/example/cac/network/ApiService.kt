@@ -8,6 +8,7 @@ import retrofit2.Call
 import retrofit2.http.*
 import com.google.gson.annotations.SerializedName
 
+
 interface ApiService {
 
     @POST("auth/signup")
@@ -91,7 +92,7 @@ interface ApiService {
     fun analyzeSpeech(
         @Path("session_id") sessionId: Int,
         @Part audioFile: MultipartBody.Part
-    ): Call<SpeechDetailResponse>
+    ): Call<SpeechAnalysisResponse>
 
     @GET("api/v1/interview/sessions/{session_id}/feedback")
     fun getInterviewFeedback(@Path("session_id") sessionId: Int): Call<InterviewResultResponse>
@@ -148,32 +149,48 @@ data class InterviewQuestionFeedback(
     val feedback: String,
     val score: Int,
     val answer_summary: String?,
+    val filler_word_count: Int?,
+    val audio_scores: AudioScores?,
 
-    val analysis: SpeechDetailResponse? = SpeechDetailResponse(
-        speech_rate = 75.0,
-        filler_words_count = 2,
-        silence_duration = 1.5,
-        volume = 80.0,
-        clarity = 85.0,
-        confidence = 90.0
-    )
+)
+
+data class SpeechAnalysisResponse(
+    val session_id: Int,
+    @SerializedName("speech_analysis")
+    val speech_analysis: SpeechDetailResponse
 )
 
 data class SpeechDetailResponse(
-    val speech_rate: Double? = 0.0,
-    val filler_words_count: Int? = 0,
-    val silence_duration: Double? = 0.0,
-    val volume: Double? = 0.0,
-    val clarity: Double? = 0.0,
-    val confidence: Double? = 0.0
-)
 
+    @SerializedName("speaking_speed_wpm") val speech_rate: Double = 0.0,
+    @SerializedName("filler_word_count") val filler_words_count: Int = 0,
+    @SerializedName("pause_count") val silence_duration: Double = 0.0,
+
+    @SerializedName("voice_volume") val volume_eval: String? = null,
+    @SerializedName("pronunciation_clarity") val clarity_eval: String? = null,
+    @SerializedName("confidence") val confidence_eval: String? = null
+) {
+
+    val clarity: Double get() = when (clarity_eval) { "명료함", "우수", "좋음" -> 95.0; "보통" -> 70.0; else -> 45.0 }
+    val confidence: Double get() = when (confidence_eval) { "우수", "높음", "좋음", "자신감 있음" -> 90.0; "보통" -> 70.0; else -> 50.0 }
+    val volume: Double get() = when (volume_eval) { "적절", "우수", "좋음" -> 85.0; "보통" -> 65.0; else -> 45.0 }
+}
 data class InterviewHistoryItem(
     val session_id: Int,
     val date: String,
     @SerializedName("score")
     val overall_score: Double,
     val change: Int?
+)
+
+
+
+data class AudioScores(
+    val clarity: Double?,
+    val speech_rate: Double?,
+    val confidence: Double?,
+    val volume: Double?,
+    val silence_duration: Double?
 )
 
 data class InterviewHistoryResponse(

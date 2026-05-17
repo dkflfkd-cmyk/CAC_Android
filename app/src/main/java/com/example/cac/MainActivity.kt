@@ -16,6 +16,7 @@ import com.example.cac.network.RetrofitClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.net.Uri
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +28,21 @@ class MainActivity : AppCompatActivity() {
         setupTitle()
 
 
+        // 적성 검사 버튼 클릭 시 웹 브라우저로 이동
+        val aptitudeUrl = "http://52.79.211.82:8000/static/aptitude-test.html"
+
+        // 버튼을 눌렀을 때
+        findViewById<View>(R.id.btnDoAptitudeTest).setOnClickListener {
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(aptitudeUrl))
+            startActivity(browserIntent)
+        }
+
+//        // 카드 배경 전체를 눌러도 이동
+//        findViewById<View>(R.id.cardAptitude).setOnClickListener {
+//            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(aptitudeUrl))
+//            startActivity(browserIntent)
+//        }
+
         setupClickListeners()
 
     }
@@ -36,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         val title = findViewById<TextView>(R.id.txtTitle)
         val text = "Career AI Coach"
         val spannable = SpannableString(text)
+
+
 
         val blue = Color.parseColor("#3950E7")
         val gray = Color.parseColor("#8A8A8A")

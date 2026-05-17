@@ -44,7 +44,7 @@
         android:id="@+id/featureScroll"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="35dp"
         android:overScrollMode="never"
         android:scrollbars="none"
         app:layout_constraintEnd_toEndOf="parent"
@@ -229,7 +229,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="23dp"
-        android:layout_marginTop="65dp"
+        android:layout_marginTop="55dp"
         android:text="최근 면접"
         android:textColor="#111111"
         android:textSize="13sp"
@@ -401,19 +401,89 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- 토스 카드 -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardToss"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+
+
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardAptitude"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:layout_marginTop="20dp"
-        app:cardCornerRadius="14dp"
-        app:cardElevation="6dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="20dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+
+        app:layout_constraintTop_toBottomOf="@id/cardRecent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardRecent"/>
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_aptitude_bg"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvAptitudeSub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="24dp"
+                android:text="어떤 직무가 맞을지 고민이라면?"
+                android:textColor="#555555"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvAptitudeTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginLeft="2dp"
+                android:text="적성 검사"
+                android:textColor="#111111"
+                android:textSize="20sp"
+                android:fontFamily="@font/pretendard_bold"
+                app:layout_constraintStart_toStartOf="@id/tvAptitudeSub"
+                app:layout_constraintTop_toBottomOf="@id/tvAptitudeSub" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDoAptitudeTest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="244dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
+                android:text="검사하기 >"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:backgroundTint="#111111"
+                app:cornerRadius="8dp"
+
+                app:layout_constraintStart_toStartOf="@id/tvAptitudeTitle"
+                app:layout_constraintTop_toBottomOf="@id/tvAptitudeSub"
+                android:layout_marginTop="20dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+
 
 
 

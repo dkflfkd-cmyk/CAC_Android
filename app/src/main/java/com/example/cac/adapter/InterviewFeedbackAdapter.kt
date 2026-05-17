@@ -1,4 +1,4 @@
-package com.example.cac
+package com.example.cac.adapter
 
 import android.view.View
 import android.view.ViewGroup
@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.cac.R
 import com.example.cac.network.InterviewQuestionFeedback
+import com.example.cac.network.SpeechDetailResponse
 
-// ⭐️ 생성자에 strengths: List<String>? 매개변수 추가!
 class InterviewFeedbackAdapter(
     private val feedbacks: List<InterviewQuestionFeedback>,
-    private val strengths: List<String>?
+    private val strengths: List<String>?,
+    private val speechAnalysis: com.example.cac.network.SpeechAnalysisResponse?
 ) : RecyclerView.Adapter<InterviewFeedbackAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -50,55 +52,71 @@ class InterviewFeedbackAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = feedbacks[position]
-        val analysis = item.analysis
+        val fullFeedback = item.feedback ?: ""
 
         holder.txtQuestionNumber.text = "질문 ${position + 1}"
-        holder.txtQuestionScore.text = "${item.score}점"
-        holder.txtQuestionText.text = item.question
+        holder.txtQuestionScore.text = "${(item.score ?: 0).toInt()}점"
+        holder.txtQuestionText.text = item.question ?: "질문 정보가 없습니다."
         holder.txtAnswerText.text = item.answer_summary ?: "답변 데이터가 존재하지 않습니다."
 
-        val clarityScore = if ((analysis?.clarity ?: 0.0) <= 1.0) {
-            ((analysis?.clarity ?: 0.0) * 100).toInt()
-        } else {
-            (analysis?.clarity ?: 0.0).toInt()
-        }
-        holder.txtPronunciationScore.text = "$clarityScore/100"
-        holder.progressPronunciation.progress = clarityScore.coerceIn(0, 100)
 
-        val speedValue = (analysis?.speech_rate ?: 0.0).toInt()
-        holder.txtSpeedScore.text = "$speedValue/100"
-        holder.progressSpeed.progress = speedValue.coerceIn(0, 100)
+        val audioScores = item.audio_scores
+        val individualFillerCount = item.filler_word_count ?: 0
 
-        val confidenceValue = (analysis?.confidence ?: 0.0).toInt()
-        holder.txtConfidenceScore.text = "$confidenceValue/100"
-        holder.progressConfidence.progress = confidenceValue.coerceIn(0, 100)
+        // 1. 발음 명료도 (질문별 개별 점수 반영)
+        val clarityScore = audioScores?.clarity ?: 0.0
+        val clarityStr = if (clarityScore >= 80) "명료함" else if (clarityScore >= 50) "보통" else "흐림"
+        holder.txtPronunciationScore.text = clarityStr
+        holder.progressPronunciation.progress = clarityScore.toInt().coerceIn(0, 100)
 
-        val volumeValue = (analysis?.volume ?: 0.0).toInt()
-        holder.txtVolumeScore.text = "$volumeValue/100"
-        holder.progressVolume.progress = volumeValue.coerceIn(0, 100)
+        // 2. 말하기 속도
+        val speedValue = audioScores?.speech_rate ?: 0.0
+        val speedEval = if (speedValue in 80.0..130.0) "적절" else if (speedValue < 80.0) "느림" else "빠름"
+        holder.txtSpeedScore.text = "${speedValue.toInt()} WPM ($speedEval)"
+        holder.progressSpeed.progress = speedValue.toInt().coerceIn(0, 100)
 
-        val fillerCount = analysis?.filler_words_count ?: 0
-        holder.txtFillerCountBadge.text = "${fillerCount}회"
-        holder.txtFillerDetail.text = "\"음\" / \"어\" / \"그\" 등 사용"
-        holder.txtFillerStatus.text = if (fillerCount <= 3) "✔ 양호" else "⚠ 주의"
+        // 3. 자신감
+        val confidenceValue = audioScores?.confidence ?: 0.0
+        val confidenceStr = if (confidenceValue >= 75) "높음" else if (confidenceValue >= 50) "보통" else "낮음"
+        holder.txtConfidenceScore.text = confidenceStr
+        holder.progressConfidence.progress = confidenceValue.toInt().coerceIn(0, 100)
 
-        val silenceDuration = analysis?.silence_duration ?: 0.0
+        // 4. 목소리 크기
+        val volumeValue = audioScores?.volume ?: 0.0
+        val volumeStr = if (volumeValue >= 70) "적절" else if (volumeValue >= 40) "보통" else "작음"
+        holder.txtVolumeScore.text = volumeStr
+        holder.progressVolume.progress = volumeValue.toInt().coerceIn(0, 100)
+
+        // 5. 불필요한 추임새
+        holder.txtFillerCountBadge.text = "${individualFillerCount}회"
+        holder.txtFillerDetail.text = if (individualFillerCount == 0) "불필요한 습관어 사용 없음" else "\"음\" / \"어\" / \"그\" 등 사용"
+        holder.txtFillerStatus.text = if (individualFillerCount <= 2) "✔ 양호" else "⚠ 주의"
+
+        // 6. 침묵 구간
+        val silenceSec = audioScores?.silence_duration ?: 0.0
         holder.txtPauseCountBadge.text = "침묵"
-        holder.txtPauseDetail.text = "총 정적 시간: ${silenceDuration}초"
-        holder.txtPauseStatus.text = if (silenceDuration <= 3.0) "✔ 적절" else "⚠ 주의"
+        holder.txtPauseDetail.text = "총 정적 시간: ${silenceSec.toInt()}초"
+        holder.txtPauseStatus.text = if (silenceSec <= 3.0) "✔ 적절" else "⚠ 주의"
 
+        // 7. 강점 및 개선점 피드백 분기 처리
+        val delimiter = if (fullFeedback.contains("그러나")) "그러나" else "하지만"
 
-        if (!strengths.isNullOrEmpty()) {
-            val strengthsText = strengths.joinToString("\n") { "• $it" }
-            holder.txtStrengthPoints.text = strengthsText
+        if (fullFeedback.contains(delimiter)) {
+            val parts = fullFeedback.split(delimiter)
+            holder.txtStrengthPoints.text = "• ${parts[0].trim()}"
+            holder.txtStrengthPoints.visibility = View.VISIBLE
+
+            holder.txtImprovementPoints.text = "• $delimiter ${parts[1].trim()}"
+            holder.txtImprovementPoints.visibility = View.VISIBLE
         } else {
-            holder.txtStrengthPoints.text = "• 분석된 종합 강점이 없습니다."
-        }
-
-        holder.txtImprovementPoints.text = if (!item.feedback.isNullOrBlank()) {
-            "• ${item.feedback}"
-        } else {
-            "• 분석된 피드백 내용이 없습니다."
+            holder.txtStrengthPoints.visibility = View.GONE
+            if (fullFeedback.isNotBlank()) {
+                holder.txtImprovementPoints.text = "• $fullFeedback"
+                holder.txtImprovementPoints.visibility = View.VISIBLE
+            } else {
+                holder.txtImprovementPoints.text = "• 분석된 피드백 내용이 없습니다."
+                holder.txtImprovementPoints.visibility = View.VISIBLE
+            }
         }
     }
 
