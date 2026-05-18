@@ -158,13 +158,13 @@ data class NewSpeechAnalysisSummaryResponse(
 )
 
 data class NewSpeechAnalysisData(
-    val speaking_speed_bpm: Double?,  // 말하기 속도 (BPM)
-    val pronunciation_avg: Double?,   // 발음 명료도 평균
-    val confidence_avg: Double?,      // 자신감 평균
-    val volume_avg: Double?,          // 목소리 크기 평균
-    val pause_count_avg: Double?,     // 쉼 횟수 평균
-    val filler_word_avg: Double?,     // 필러워드 평균
-    val speech_ratio_avg: Double?,    // 발화 비율 (%)
+    @SerializedName("speaking_speed_wpm") val speaking_speed_wpm: Double?,
+    @SerializedName("intonation_score") val intonation_score: Double?,   // 발음 명료도
+    @SerializedName("confidence_avg") val confidence_avg: Double?,      // 자신감
+    @SerializedName("volume_score") val volume_score: Double?,          // 목소리 크기
+    @SerializedName("pause_count_avg") val pause_count_avg: Double?,     // 쉼 횟수 평균
+    @SerializedName("filler_word_total") val filler_word_total: Double?, // 필러워드 총합
+    @SerializedName("speech_ratio_avg") val speech_ratio_avg: Double?,    // 발화 비율
     val question_count: Int
 )
 

@@ -135,7 +135,7 @@ class InterviewResultActivity : AppCompatActivity() {
         })
     }
 
-    // 💡 List가 아니라 InterviewResultData 객체 자체를 받도록 수정됨
+
     private fun displayResultData(feedbackData: InterviewResultData, speechAnalysis: Map<String, Any>?) {
 
         val feedbacks = feedbackData.question_feedbacks
@@ -148,20 +148,31 @@ class InterviewResultActivity : AppCompatActivity() {
 
         val speechData = speechAnalysis?.get("speech_analysis") as? Map<*, *> ?: speechAnalysis
 
-        val pronStr = speechData?.get("pronunciation_avg")?.toString()
-        val pronunciation = pronStr?.toFloatOrNull() ?: 90f
 
-        val speedStr = speechData?.get("speaking_speed_bpm")?.toString()
+
+        // 1. 말하기 속도
+        val speedStr = speechData?.get("speaking_speed_wpm")?.toString()
         val speed = speedStr?.toFloatOrNull() ?: 85f
 
-        val confStr = speechData?.get("confidence_avg")?.toString()
-        val confidence = confStr?.toFloatOrNull() ?: 82f
+        // 2. 발음 명료도
+        val pronunciationStr = speechData?.get("intonation_score")?.toString()
+        val pronunciation = pronunciationStr?.toFloatOrNull() ?: 90f
 
-        val volStr = speechData?.get("volume_avg")?.toString()
+        // 3. 자신감
+        val confidenceStr = speechData?.get("confidence_avg")?.toString()
+        val confidence = confidenceStr?.toFloatOrNull() ?: 82f
+
+        // 4. 목소리 크기
+        val volStr = speechData?.get("volume_score")?.toString()
         val volume = volStr?.toFloatOrNull() ?: 88f
 
-        val fillerCount = speechData?.get("filler_word_avg")?.toString()?.toFloatOrNull()?.toInt() ?: 3
+        // 5. 필러워드 총합
+        val fillerCount = speechData?.get("filler_word_total")?.toString()?.toFloatOrNull()?.toInt() ?: 3
+
+        // 6. 쉼 횟수 평균
         val pauseCount = speechData?.get("pause_count_avg")?.toString()?.toFloatOrNull()?.toInt() ?: 5
+
+
 
         findViewById<TextView>(R.id.txtSpeedScore)?.text = "${speed.toInt()}/100"
         findViewById<ProgressBar>(R.id.progressSpeed)?.progress = speed.toInt()
@@ -177,6 +188,28 @@ class InterviewResultActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.txtFillerCountBadge)?.text = "${fillerCount}회"
         findViewById<TextView>(R.id.txtPauseCountBadge)?.text = "${pauseCount}회"
+
+
+
+        val tvFillerStatus = findViewById<TextView>(R.id.txtFillerStatus)
+        if (fillerCount > 5) {
+            tvFillerStatus?.text = "⚠ 주의"
+            tvFillerStatus?.setBackgroundColor(Color.parseColor("#FF5252")) // 빨간색 알림
+        } else {
+            tvFillerStatus?.text = "✔ 양호"
+            tvFillerStatus?.setBackgroundColor(Color.parseColor("#111111")) // 기본 검은색
+        }
+
+        val tvPauseStatus = findViewById<TextView>(R.id.txtPauseStatus)
+        if (pauseCount > 5) {
+            tvPauseStatus?.text = "⚠ 주의"
+            tvPauseStatus?.setBackgroundColor(Color.parseColor("#FF5252")) // 빨간색 알림
+        } else {
+            tvPauseStatus?.text = "✔ 적절"
+            tvPauseStatus?.setBackgroundColor(Color.parseColor("#111111")) // 기본 검은색
+        }
+
+
 
         val improvements = feedbackData.improvements
         if (!improvements.isNullOrEmpty()) {
@@ -199,13 +232,7 @@ class InterviewResultActivity : AppCompatActivity() {
         val collaboration = compScores["collaboration"]?.toFloat() ?: 50f
         val passion = compScores["passion"]?.toFloat() ?: 50f
 
-        val scores = floatArrayOf(
-            technical,         // 기술
-            communication,     // 소통
-            problemSolving,    // 문제해결
-            collaboration,     // 협업
-            passion            // 열정
-        )
+        val scores = floatArrayOf(technical, communication, problemSolving, collaboration, passion)
 
         val overallScore = feedbackData.overall_score.toInt()
         findViewById<TextView>(R.id.txtTotalScore)?.text = overallScore.toString()
