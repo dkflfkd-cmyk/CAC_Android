@@ -86,7 +86,7 @@ interface ApiService {
     @GET("api/v1/sessions/{session_id}/summary")
     fun getSessionSummary(@Path("session_id") sessionId: Int): Call<ResponseBody>
 
-    // 발화 분석 API (Multipart가 필요한 실제 파일 분석용)
+    // 발화 분석 API
     @Multipart
     @POST("api/v1/interview/sessions/{session_id}/analyze-speech")
     fun analyzeSpeech(
@@ -94,8 +94,17 @@ interface ApiService {
         @Part audioFile: MultipartBody.Part
     ): Call<SpeechAnalysisResponse>
 
+
     @GET("api/v1/interview/sessions/{session_id}/feedback")
-    fun getInterviewFeedback(@Path("session_id") sessionId: Int): Call<InterviewResultResponse>
+    fun getInterviewResult(
+        @Path("session_id") sessionId: Int
+    ): Call<InterviewResultResponse>
+
+    //종합 면접채팅 발화
+    @GET("api/v1/interview/sessions/{session_id}/analyze-speech")
+    fun getSpeechAnalysis(
+        @Path("session_id") sessionId: Int
+    ): Call<NewSpeechAnalysisSummaryResponse>
 
     @POST("api/v1/resume/{resume_id}/interview/evaluate")
     fun evaluateInterview(
@@ -134,7 +143,6 @@ data class InterviewResultResponse(
     val session_id: Int,
     val feedback: InterviewResultData
 )
-
 data class InterviewResultData(
     val overall_score: Double,
     val competency_scores: Map<String, Int>,
@@ -144,33 +152,83 @@ data class InterviewResultData(
     val improvements: List<String>?
 )
 
-data class InterviewQuestionFeedback(
-    val question: String,
-    val feedback: String,
-    val score: Int,
-    val answer_summary: String?,
-    val filler_word_count: Int?,
-    val audio_scores: AudioScores?,
-
+data class NewSpeechAnalysisSummaryResponse(
+    val session_id: Int,
+    val speech_analysis: NewSpeechAnalysisData
 )
+
+data class NewSpeechAnalysisData(
+    val speaking_speed_bpm: Double?,  // 말하기 속도 (BPM)
+    val pronunciation_avg: Double?,   // 발음 명료도 평균
+    val confidence_avg: Double?,      // 자신감 평균
+    val volume_avg: Double?,          // 목소리 크기 평균
+    val pause_count_avg: Double?,     // 쉼 횟수 평균
+    val filler_word_avg: Double?,     // 필러워드 평균
+    val speech_ratio_avg: Double?,    // 발화 비율 (%)
+    val question_count: Int
+)
+
+data class InterviewQuestionFeedback(
+    val question_id: Int,
+    @SerializedName("question") val question_text: String,
+    @SerializedName("answer_summary") val answer_text: String,
+    val score: Double,
+    val strength: String? = null,
+    val weakness: String? = null,
+    @SerializedName("feedback") val suggestion: String? = null
+)
+
+data class AnswerDetail(
+    val answer_id: Int?,
+    val stt_text: String?,
+    val filler_word_count: Int?,
+    val audio_scores: AudioScores?
+)
+
+data class AudioScores(
+    val tempo: Double?,               // 말하기 속도
+    val intonation_score: Double?,     // 억양 점수
+    val confidence_score: Double?,     // 자신감 점수
+    val volume_score: Double?,         // 목소리 크기 점수
+    val pause_count: Int?,             // 정적/쉼 횟수
+    val speech_ratio: Double?,
+    val duration_sec: Double?,
+
+
+    val speed_feedback: String? = "",
+    val volume_feedback: String? = "",
+    val stutter_feedback: String? = "",
+    val intonation_feedback: String? = ""
+)
+
 
 data class SpeechAnalysisResponse(
-    val session_id: Int,
-    @SerializedName("speech_analysis")
-    val speech_analysis: SpeechDetailResponse
-)
-
-data class SpeechDetailResponse(
-
-    @SerializedName("speaking_speed_wpm") val speech_rate: Double = 0.0,
+    @SerializedName("avg_tempo") val avg_tempo: Double = 0.0,
     @SerializedName("filler_word_count") val filler_words_count: Int = 0,
     @SerializedName("pause_count") val silence_duration: Double = 0.0,
-
     @SerializedName("voice_volume") val volume_eval: String? = null,
     @SerializedName("pronunciation_clarity") val clarity_eval: String? = null,
     @SerializedName("confidence") val confidence_eval: String? = null
 ) {
+    val clarity: Double get() = when (clarity_eval) { "명료함", "우수", "좋음" -> 95.0; "보통" -> 70.0; else -> 45.0 }
+    val confidence: Double get() = when (confidence_eval) { "우수", "높음", "좋음", "자신감 있음" -> 90.0; "보통" -> 70.0; else -> 50.0 }
+    val volume: Double get() = when (volume_eval) { "적절", "우수", "좋음" -> 85.0; "보통" -> 65.0; else -> 45.0 }
+}
 
+data class FeedbackDetail(
+    val strength: String?,
+    val weakness: String?,
+    val suggestion: String?,
+    val score: Int?
+)
+data class SpeechDetailResponse(
+    @SerializedName("speaking_speed_wpm") val speech_rate: Double = 0.0,
+    @SerializedName("filler_word_count") val filler_words_count: Int = 0,
+    @SerializedName("pause_count") val silence_duration: Double = 0.0,
+    @SerializedName("voice_volume") val volume_eval: String? = null,
+    @SerializedName("pronunciation_clarity") val clarity_eval: String? = null,
+    @SerializedName("confidence") val confidence_eval: String? = null
+) {
     val clarity: Double get() = when (clarity_eval) { "명료함", "우수", "좋음" -> 95.0; "보통" -> 70.0; else -> 45.0 }
     val confidence: Double get() = when (confidence_eval) { "우수", "높음", "좋음", "자신감 있음" -> 90.0; "보통" -> 70.0; else -> 50.0 }
     val volume: Double get() = when (volume_eval) { "적절", "우수", "좋음" -> 85.0; "보통" -> 65.0; else -> 45.0 }
@@ -178,20 +236,13 @@ data class SpeechDetailResponse(
 data class InterviewHistoryItem(
     val session_id: Int,
     val date: String,
-    @SerializedName("score")
-    val overall_score: Double,
+    @SerializedName("score") val overall_score: Double,
     val change: Int?
 )
 
 
 
-data class AudioScores(
-    val clarity: Double?,
-    val speech_rate: Double?,
-    val confidence: Double?,
-    val volume: Double?,
-    val silence_duration: Double?
-)
+
 
 data class InterviewHistoryResponse(
     val history: List<InterviewHistoryItem>,
@@ -201,6 +252,9 @@ data class InterviewHistoryResponse(
     val first_score: Int,
     val latest_score: Int
 )
+
+
+
 
 data class InterviewSessionRequest(
     val user_id: String,

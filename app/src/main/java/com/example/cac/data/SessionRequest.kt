@@ -2,22 +2,24 @@ package com.example.cac.data
 
 import com.google.gson.annotations.SerializedName
 
+
+
 data class SessionRequest(
     @SerializedName("user_id")
-    val user_id: String,
+    val userId: String,
 
     @SerializedName("target_job")
-    val target_job: String,
+    val targetJob: String,
 
     @SerializedName("question_count")
-    val question_count: Int,
+    val questionCount: Int,
 
     @SerializedName("question_types")
-    val question_types: List<String>,
+    val questionTypes: List<String>,
 
-    @SerializedName("analysis_id")
-    val analysis_id: Int? = null,
+    @SerializedName("resume_id")
+    val resumeId: Int? = null,
 
     @SerializedName("pdf_s3_key")
-    val pdf_s3_key: String? = null
+    val pdfS3Key: String? = null
 )

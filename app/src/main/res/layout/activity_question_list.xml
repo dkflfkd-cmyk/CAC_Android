@@ -51,118 +51,126 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/txtTitle" />
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/topCard"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/contentScrollView"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
+        android:layout_height="0dp"
         android:layout_marginTop="20dp"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="8dp"
-        app:strokeWidth="0dp"
+        android:overScrollMode="never"
+        android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/txtSubtitle"
+        app:layout_constraintBottom_toTopOf="@id/bottomTab"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="18dp"
-            android:background="@drawable/bg_score_gradient">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/txtJobTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="UI/UX 디자이너"
-                android:textColor="#FFFFFF"
-                android:textSize="25sp"
-                android:layout_marginTop="10dp"
-                android:layout_marginLeft="13dp"
-                android:textStyle="bold"
-                android:fontFamily="@font/pretendard_bold"/>
-
-            <TextView
-                android:id="@+id/txtSubInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginLeft="13dp"
-                android:text="상황 대처 질문"
-                android:textColor="#EDEDED"
-                android:textSize="12sp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="30dp"/>
-
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/topCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="8dp"
+                app:strokeWidth="0dp">
 
-                <ProgressBar
-                    android:id="@+id/progressQuestion"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="0dp"
-                    android:layout_height="12dp"
-                    android:layout_weight="1"
-                    android:layout_marginRight="5dp"
-                    android:layout_marginLeft="13dp"
-                    android:layout_marginBottom="7dp"
-                    android:max="5"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/bg_question_progress"/>
-
-                <TextView
-                    android:id="@+id/txtProgress"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="0/5"
-                    android:layout_marginRight="13dp"
-                    android:layout_marginBottom="7dp"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"/>
-            </LinearLayout>
+                    android:orientation="vertical"
+                    android:padding="18dp"
+                    android:background="@drawable/bg_score_gradient">
+
+                    <TextView
+                        android:id="@+id/txtJobTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="UI/UX 디자이너"
+                        android:textColor="#FFFFFF"
+                        android:textSize="25sp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginLeft="13dp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/pretendard_bold"/>
+
+                    <TextView
+                        android:id="@+id/txtSubInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginLeft="13dp"
+                        android:text="상황 대처 질문"
+                        android:textColor="#EDEDED"
+                        android:textSize="12sp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ProgressBar
+                            android:id="@+id/progressQuestion"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="0dp"
+                            android:layout_height="12dp"
+                            android:layout_weight="1"
+                            android:layout_marginRight="5dp"
+                            android:layout_marginLeft="13dp"
+                            android:layout_marginBottom="7dp"
+                            android:max="5"
+                            android:progress="0"
+                            android:progressDrawable="@drawable/bg_question_progress"/>
+
+                        <TextView
+                            android:id="@+id/txtProgress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0/5"
+                            android:layout_marginRight="13dp"
+                            android:layout_marginBottom="7dp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvQuestionList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:clipToPadding="false"
+                android:clipChildren="false"
+                android:nestedScrollingEnabled="false" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRecreateQuestions"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                app:backgroundTint="#111111"
+                android:text="질문 다시받기 ↻"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                app:cornerRadius="10dp" />
 
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvQuestionList"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="25dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:clipToPadding="false"
-        android:clipChildren="false"
-        app:layout_constraintTop_toBottomOf="@id/topCard"
-        app:layout_constraintBottom_toTopOf="@id/btnRecreateQuestions"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnRecreateQuestions"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginBottom="12dp"
-        app:backgroundTint="#111111"
-        android:text="질문 다시받기 ↻"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        app:cornerRadius="10dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomTab" />
-
+    </androidx.core.widget.NestedScrollView>
 
     <LinearLayout
         android:id="@+id/bottomTab"
@@ -192,7 +200,6 @@
             android:focusable="true"
             android:background="@null"/>
 
-
         <TextView
             android:id="@+id/btnInterview"
             android:layout_width="0dp"
@@ -209,7 +216,6 @@
             android:focusable="true"
             android:background="@null"/>
 
-
         <TextView
             android:id="@+id/btnNoticev"
             android:layout_width="0dp"
@@ -225,7 +231,6 @@
             android:clickable="true"
             android:focusable="true"
             android:background="@null"/>
-
 
         <TextView
             android:id="@+id/btnNoticev2"

@@ -442,7 +442,7 @@
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="24dp"
                 android:text="어떤 직무가 맞을지 고민이라면?"
-                android:textColor="#555555"
+                android:textColor="#4E5FC7"
                 android:textSize="12sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -454,7 +454,7 @@
                 android:layout_marginTop="4dp"
                 android:layout_marginLeft="2dp"
                 android:text="적성 검사"
-                android:textColor="#111111"
+                android:textColor="#4049A8"
                 android:textSize="20sp"
                 android:fontFamily="@font/pretendard_bold"
                 app:layout_constraintStart_toStartOf="@id/tvAptitudeSub"

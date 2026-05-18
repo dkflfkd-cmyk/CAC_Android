@@ -108,7 +108,7 @@ class cardResumeActivity : AppCompatActivity() {
 
         btnFormDownload.setOnClickListener {
 
-            val url = "http://54.180.123.65:8000/static/index.html"
+            val url = "http://52.79.211.82:8000/static/index.html"
 
             // 인터넷 브라우저 열기
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
@@ -261,6 +261,8 @@ class cardResumeActivity : AppCompatActivity() {
                         Log.d("UPLOAD", "body=$body")
 
                         val rawResumeId = body?.get("resume_id")
+                        val pdfS3Key = body?.get("pdf_s3_key") as? String
+
                         Log.d("UPLOAD", "rawResumeId=$rawResumeId, class=${rawResumeId?.javaClass?.name}")
 
                         val resumeId = when (rawResumeId) {
@@ -279,7 +281,7 @@ class cardResumeActivity : AppCompatActivity() {
 
                         Log.d("UPLOAD", "resumeId parsed=$resumeId")
 
-                        saveLatestResumeId(resumeId)
+                        saveLatestResumeId(resumeId, pdfS3Key)
 
                         txtResult.text = "분석 요청 중..."
                         requestAnalyze(resumeId)
@@ -364,11 +366,12 @@ class cardResumeActivity : AppCompatActivity() {
     }
 
     //최근이력서 저장
-    private fun saveLatestResumeId(resumeId: Int) {
+    private fun saveLatestResumeId(resumeId: Int, pdfS3Key: String?) {
         val sharedPref = getSharedPreferences("ResumePrefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putInt("last_resume_id", resumeId)
-            apply() // 비동기로 안전하게 저장
+            putString("last_pdf_s3_key", pdfS3Key)
+            apply()
         }
     }
 

@@ -37,7 +37,7 @@ class QuestionSetupActivity : AppCompatActivity() {
     private var selectedResumeId: Int? = null
     private var selectedS3Key: String? = null
 
-    // 상단에 선언된 변수명들을 코드 전체에서 일치시킵니다.
+
     private lateinit var etJobInput: EditText
     private lateinit var txtType: TextView
     private lateinit var txtCount: TextView
@@ -115,12 +115,12 @@ class QuestionSetupActivity : AppCompatActivity() {
 
 
                     val request = SessionRequest(
-                        user_id = loginUserId,
-                        target_job = selectedJob!!,
-                        question_count = selectedCount!!,
-                        question_types = listOf(selectedType!!),
-                        analysis_id = selectedResumeId,
-                        pdf_s3_key = selectedS3Key
+                        userId = loginUserId,
+                        targetJob = selectedJob!!,
+                        questionCount = selectedCount!!,
+                        questionTypes = listOf(selectedType!!),
+                        resumeId = selectedResumeId,
+                        pdfS3Key = selectedS3Key
                     )
 
                     val response = RetrofitClient.api.createSession(request).execute()

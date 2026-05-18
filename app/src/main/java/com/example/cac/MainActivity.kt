@@ -89,9 +89,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 대시보드 버튼
-        findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
-            startActivity(Intent(this, DashboardActivity::class.java))
+//        findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
+//            startActivity(Intent(this, DashboardActivity::class.java))
+//        }
+
+//테스트
+        val btnNoticev = findViewById<View>(R.id.btnNoticev)
+
+        btnNoticev.setOnClickListener {
+            val intent = Intent(this, InterviewResultActivity::class.java)
+            intent.putExtra("session_id", 199)
+            startActivity(intent)
         }
+
 
         // 면접 카드
         findViewById<View>(R.id.cardInterview).setOnClickListener {

@@ -14,7 +14,6 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.text.Spannable
 import android.text.SpannableString
-
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
@@ -43,7 +42,6 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class InterviewStartActivity : AppCompatActivity() {
-
 
     private var fullAnswer: String = ""
     private lateinit var mainScrollView: NestedScrollView
@@ -83,50 +81,52 @@ class InterviewStartActivity : AppCompatActivity() {
     private var sessionId: Int = -1
     private var questionId: Int = -1
 
-
     private var questionList: ArrayList<String> = arrayListOf()
     private var currentIndex: Int = 0
     private var totalQuestionCount: Int = 3
+
+    // [추가] 각 질문들의 답변 상태(True/False)를 저장할 리스트 변수
+    private var answeredStateList: ArrayList<Boolean> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_interview_start)
 
-        // 1. 모든 뷰 연결 (findViewById 실행)
         initViews()
 
-        // 2. 전달받은 데이터 리스트와 인덱스 읽기
+        // 전달받은 데이터 읽기
         questionList = intent.getStringArrayListExtra("question_list") ?: arrayListOf()
         questionIdList = intent.getIntegerArrayListExtra("question_id_list") ?: arrayListOf()
         currentIndex = intent.getIntExtra("current_index", 0)
         sessionId = intent.getIntExtra("session_id", -1)
         totalQuestionCount = intent.getIntExtra("count", 3)
 
+    //답변 여부
+        val receivedStates = intent.getBooleanArrayExtra("answered_state_list")?.toList()
+        if (receivedStates != null) {
+            answeredStateList = ArrayList(receivedStates)
+        } else {
+
+            answeredStateList = ArrayList(Collections.nCopies(totalQuestionCount, false))
+        }
 
         if (questionIdList.isNotEmpty() && currentIndex < questionIdList.size) {
             questionId = questionIdList[currentIndex]
         } else {
-
             questionId = intent.getIntExtra("question_id", -1)
         }
 
-        // 로그캣에서 ID가 잘 바뀌는지 확인용
         android.util.Log.d("INTERVIEW_CHECK", "현재 질문 순서: ${currentIndex + 1}, 서버 전송 ID: $questionId")
 
-        // 3. 질문 텍스트 설정
         if (questionList.isNotEmpty() && currentIndex < questionList.size) {
             txtQuestion.text = questionList[currentIndex]
         } else {
             txtQuestion.text = intent.getStringExtra("question_text").orEmpty()
         }
 
-        // 4. 프로그레스바 및 상단 텍스트(1/3 등) 업데이트
-        val displayNum = currentIndex + 1
-        progressQuestion.max = totalQuestionCount
-        progressQuestion.progress = displayNum
-        txtProgress.text = "$displayNum/$totalQuestionCount"
+        // 상단 프로그레스 바 및 텍스트 업데이트 로직 분리 호출
+        updateProgressGraph()
 
-        // 5. 기능 초기화 및 리스너 등록
         initSpeechRecognizer()
 
         imgStar.setOnClickListener { toggleStarStatus() }
@@ -168,11 +168,23 @@ class InterviewStartActivity : AppCompatActivity() {
     }
 
 
+    private fun updateProgressGraph() {
+
+        val completedCount = answeredStateList.count { it }
+        progressQuestion.max = totalQuestionCount
+        progressQuestion.progress = completedCount
+        txtProgress.text = "$completedCount/$totalQuestionCount"
+
+
+    }
+
     private fun moveToNextQuestion() {
         if (currentIndex + 1 < questionList.size) {
             val intent = Intent(this, InterviewStartActivity::class.java).apply {
                 putStringArrayListExtra("question_list", questionList)
                 putIntegerArrayListExtra("question_id_list", questionIdList)
+
+                putExtra("answered_state_list", answeredStateList.toBooleanArray())
                 putExtra("current_index", currentIndex + 1)
                 putExtra("session_id", sessionId)
                 putExtra("count", totalQuestionCount)
@@ -182,6 +194,15 @@ class InterviewStartActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "마지막 질문입니다.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+
+    private fun ArrayList<Boolean>.getBooleanArray(): BooleanArray {
+        val array = BooleanArray(this.size)
+        for (i in this.indices) {
+            array[i] = this[i]
+        }
+        return array
     }
 
     private fun handleMicClick() {
@@ -244,6 +265,14 @@ class InterviewStartActivity : AppCompatActivity() {
                         btnMic.setImageResource(R.drawable.ic_check)
                         btnMic.visibility = View.VISIBLE
                         btnMic.alpha = 1.0f
+
+                        // 답변 업로드 성공 시 현재 질문 인덱스의 상태를 true로 변경
+                        if (currentIndex < answeredStateList.size) {
+                            answeredStateList[currentIndex] = true
+                        }
+                        // 그래프 실시간 최신화 반영
+                        updateProgressGraph()
+
                         displayFeedback(data)
                     } else { resetUIOnError("분석 실패") }
                 }

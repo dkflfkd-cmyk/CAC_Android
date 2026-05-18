@@ -12,7 +12,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
-import com.google.gson.Gson
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Build
@@ -27,8 +26,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
-import com.example.cac.data.GeneratedQuestion
+import com.google.gson.Gson
 import com.example.cac.network.AudioAnswerResponse
+import com.example.cac.network.InterviewResultResponse
+import com.example.cac.network.NewSpeechAnalysisSummaryResponse
 
 class InterviewChatActivity : AppCompatActivity() {
 
@@ -55,6 +56,13 @@ class InterviewChatActivity : AppCompatActivity() {
     private var sessionId: Int = -1
     private var userName: String = "사용자"
 
+    // 💡 AI 서버의 처리 속도를 고려하여 최대 재시도 횟수를 10회(총 20초)로 늘립니다.
+    private var retryCount = 0
+    private val MAX_RETRY = 10
+
+    private var speechRetryCount = 0
+    private val MAX_SPEECH_RETRY = 10
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_interview_chat)
@@ -67,7 +75,7 @@ class InterviewChatActivity : AppCompatActivity() {
         btnReplay = findViewById(R.id.btnReplay)
         findViewById<TextView>(R.id.btnExit).setOnClickListener { finish() }
 
-        // 2. 초기 세팅 (이름 변경으로 충돌 해결)
+        // 2. 초기 세팅
         checkAudioPermission()
         fetchUserInfo()
         resetButtonVisibility()
@@ -122,14 +130,44 @@ class InterviewChatActivity : AppCompatActivity() {
     }
 
     private fun fetchUserInfo() {
-        val token = "Bearer ${SessionManager.getToken(this)}"
+        val rawToken = SessionManager.getToken(this) ?: ""
+        val token = if (rawToken.startsWith("Bearer ")) rawToken else "Bearer $rawToken"
+        Log.d("UserInfo", "내 정보 요청 시작 - 토큰 유무: ${token.isNotBlank()}")
+
+
+        val sharedPreferences = getSharedPreferences("CacPrefs", MODE_PRIVATE)
+
         RetrofitClient.api.me(token).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
-                if (response.isSuccessful) {
-                    userName = response.body()?.get("username")?.toString() ?: "사용자"
+                if (response.isSuccessful && response.body() != null) {
+                    val body = response.body()!!
+                    Log.d("UserInfo", "서버 응답 데이터 전체: $body")
+
+                    val fetchedName = body["username"] ?: body["name"] ?: body["nickname"]
+
+                    if (fetchedName != null) {
+                        userName = fetchedName.toString()
+                        Log.d("UserInfo", "✅ 사용자 이름 연동 성공: $userName")
+
+
+                        sharedPreferences.edit().putString("cached_user_name", userName).apply()
+                    } else {
+                        Log.w("UserInfo", "⚠️ 응답은 성공했으나 이름 데이터를 찾을 수 없습니다.")
+                    }
+                } else {
+                    Log.e("UserInfo", "❌ 내 정보 조회 실패 (상태 코드: ${response.code()}) -> 로컬 캐시 이름 로드")
+
+
+                    userName = sharedPreferences.getString("cached_user_name", "사용자") ?: "사용자"
+                    Log.d("UserInfo", "복구된 사용자 이름: $userName")
                 }
             }
-            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {}
+
+            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                Log.e("UserInfo", "❌ 통신 에러 발생: ${t.message} -> 로컬 캐시 이름 로드")
+
+                userName = sharedPreferences.getString("cached_user_name", "사용자") ?: "사용자"
+            }
         })
     }
 
@@ -145,6 +183,7 @@ class InterviewChatActivity : AppCompatActivity() {
                 mediaRecorder?.resume()
                 recordState = 1
                 btnRecord.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FF5252"))
+                resetButtonVisibility()
                 startUserTypingAnimation()
                 return
             }
@@ -152,6 +191,7 @@ class InterviewChatActivity : AppCompatActivity() {
 
         recordState = 1
         btnRecord.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FF5252"))
+        resetButtonVisibility()
         startUserTypingAnimation()
 
         try {
@@ -213,21 +253,6 @@ class InterviewChatActivity : AppCompatActivity() {
         chatContainer.addView(layout)
         scrollToBottom()
         return tv!!
-    }
-
-    private fun prepareAndFetchQuestions() {
-        RetrofitClient.api.generateQuestions(sessionId).enqueue(object : Callback<List<GeneratedQuestion>> {
-            override fun onResponse(call: Call<List<GeneratedQuestion>>, response: Response<List<GeneratedQuestion>>) {
-                if (response.isSuccessful) {
-                    fetchNextQuestionFromServer()
-                } else {
-                    addInterviewerBubble("질문 생성에 실패했습니다. 다시 시도해 주세요.")
-                }
-            }
-            override fun onFailure(call: Call<List<GeneratedQuestion>>, t: Throwable) {
-                addInterviewerBubble("네트워크 오류가 발생했습니다.")
-            }
-        })
     }
 
     private fun stopRecording() {
@@ -330,33 +355,6 @@ class InterviewChatActivity : AppCompatActivity() {
         resetButtonVisibility()
         removeTypingAnimation()
         currentProcessingBubble?.text = "(분석 실패 - 다시 시도해주세요)"
-    }
-
-    private fun fetchNextQuestionFromServer() {
-        showTypingAnimation()
-
-        RetrofitClient.api.getQuestions(sessionId).enqueue(object : Callback<List<GeneratedQuestion>> {
-            override fun onResponse(call: Call<List<GeneratedQuestion>>, response: Response<List<GeneratedQuestion>>) {
-                removeTypingAnimation()
-
-                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
-                    val questions = response.body()!!
-                    val nextQuestionData = questions.find { it.order_num == questionId }
-                        ?: questions.firstOrNull()
-
-                    if (nextQuestionData != null) {
-                        addInterviewerBubble(nextQuestionData.question_text)
-                    } else {
-                        addInterviewerBubble("준비된 모든 질문이 끝났습니다. 수고하셨습니다!")
-                    }
-                }
-            }
-
-            override fun onFailure(call: Call<List<GeneratedQuestion>>, t: Throwable) {
-                removeTypingAnimation()
-                addInterviewerBubble("네트워크 오류로 다음 질문을 가져오지 못했습니다.")
-            }
-        })
     }
 
     private fun addInterviewerBubble(text: String) {
@@ -475,7 +473,6 @@ class InterviewChatActivity : AppCompatActivity() {
         val donePanel = findViewById<LinearLayout>(R.id.layoutDonePanel)
         val txtStatus = findViewById<TextView>(R.id.txtDoneStatus)
 
-
         donePanel?.visibility = View.VISIBLE
         donePanel?.alpha = 0.0f
 
@@ -484,77 +481,90 @@ class InterviewChatActivity : AppCompatActivity() {
             ?.setDuration(1500)
             ?.withEndAction {
                 txtStatus?.text = "AI가 음성 발화를 정밀 분석 중입니다...\n잠시만 기다려 주세요."
+                speechRetryCount = 0
                 requestSpeechAnalysisAndNavigate(sessionId)
             }
             ?.start()
     }
 
+
+
+
     private fun requestSpeechAnalysisAndNavigate(sessionId: Int) {
-        val audioFile = File(externalCacheDir, "interview_audio.m4a")
-
-        val audioMultipart: MultipartBody.Part = if (audioFile.exists() && audioFile.length() > 0) {
-            val requestBody = audioFile.asRequestBody("audio/*".toMediaTypeOrNull())
-            MultipartBody.Part.createFormData("file", audioFile.name, requestBody)
-        } else {
-            navigateToResultActivity(sessionId)
-            return
-        }
+        Log.d("SpeechAnalysis", "발화 분석 조회 시작 (GET)... ($speechRetryCount/$MAX_SPEECH_RETRY)")
 
 
-        RetrofitClient.api.analyzeSpeech(sessionId, audioMultipart).enqueue(object : Callback<com.example.cac.network.SpeechAnalysisResponse> {
-
-
+        RetrofitClient.api.getSpeechAnalysis(sessionId).enqueue(object : Callback<NewSpeechAnalysisSummaryResponse> {
             override fun onResponse(
-                call: Call<com.example.cac.network.SpeechAnalysisResponse>,
-                response: Response<com.example.cac.network.SpeechAnalysisResponse>
+                call: Call<NewSpeechAnalysisSummaryResponse>,
+                response: Response<NewSpeechAnalysisSummaryResponse>
             ) {
-                var speechAnalysisJson: String? = null
-
                 if (response.isSuccessful && response.body() != null) {
-                    Log.d("SpeechAnalysis", "발화 분석 완료 성공! 이어서 피드백 생성 여부 체크 시작")
-                    speechAnalysisJson = com.google.gson.Gson().toJson(response.body())
+                    Log.d("SpeechAnalysis", "✅ 발화 분석 조회 완료!")
+                    val speechAnalysisJson = Gson().toJson(response.body())
+                    retryCount = 0
+                    checkFeedbackReadyAndNavigate(sessionId, speechAnalysisJson)
                 } else {
-                    Log.e("SpeechAnalysis", "발화 분석 서버 에러 발생 코드: ${response.code()}")
+                    Log.e("SpeechAnalysis", "발화 분석 대기 중 (코드: ${response.code()})")
+                    handleSpeechAnalysisRetry(sessionId)
                 }
-
-                checkFeedbackReadyAndNavigate(sessionId, speechAnalysisJson)
             }
 
-
-            override fun onFailure(call: Call<com.example.cac.network.SpeechAnalysisResponse>, t: Throwable) {
-                Log.e("SpeechAnalysis", "발화 분석 네트워크 통신 실패 원인: ${t.message}")
-                checkFeedbackReadyAndNavigate(sessionId, null)
+            override fun onFailure(call: Call<NewSpeechAnalysisSummaryResponse>, t: Throwable) {
+                Log.e("SpeechAnalysis", "발화 분석 통신 실패: ${t.message}")
+                handleSpeechAnalysisRetry(sessionId)
             }
         })
     }
 
-    private fun checkFeedbackReadyAndNavigate(sessionId: Int, speechAnalysisJson: String?) { // ◀ 파라미터 추가
-        RetrofitClient.api.getInterviewFeedback(sessionId).enqueue(object : Callback<com.example.cac.network.InterviewResultResponse> {
-            override fun onResponse(call: Call<com.example.cac.network.InterviewResultResponse>, response: Response<com.example.cac.network.InterviewResultResponse>) {
+    private fun handleSpeechAnalysisRetry(sessionId: Int) {
+        if (speechRetryCount < MAX_SPEECH_RETRY) {
+            speechRetryCount++
+            Log.d("SpeechAnalysis", "서버 오디오 가공 대기 중... 2초 뒤 자동으로 다시 조회합니다. ($speechRetryCount/$MAX_SPEECH_RETRY)")
+            handler.postDelayed({
+                requestSpeechAnalysisAndNavigate(sessionId)
+            }, 2000)
+        } else {
+            Log.e("SpeechAnalysis", "❌ 발화 분석 대기 시간 초과(스킵). 빈 상태로 리포트 체크를 진행합니다.")
+            retryCount = 0
+            checkFeedbackReadyAndNavigate(sessionId, null)
+        }
+    }
+
+    private fun checkFeedbackReadyAndNavigate(sessionId: Int, speechAnalysisJson: String?) {
+        Log.d("InterviewWait", "피드백 리포트 조회 시작... ($retryCount/$MAX_RETRY)")
+
+        RetrofitClient.api.getInterviewResult(sessionId).enqueue(object : Callback<InterviewResultResponse> {
+            override fun onResponse(
+                call: Call<InterviewResultResponse>,
+                response: Response<InterviewResultResponse>
+            ) {
                 val body = response.body()
 
-                if (response.isSuccessful && body != null &&
-                    !body.feedback.question_feedbacks.isNullOrEmpty()) {
 
-                    Log.d("InterviewWait", "피드백 데이터 확인 완료! 결과 화면으로 이동합니다.")
-
-
-                    val feedbackJson = com.google.gson.Gson().toJson(body)
+                if (response.isSuccessful && body != null && body.feedback != null) {
+                    Log.d("InterviewWait", "✅ 피드백 리포트 생성 완료! 결과 화면으로 전환합니다.")
 
 
+                    val feedbackJson = Gson().toJson(body)
                     navigateToResultActivity(sessionId, feedbackJson, speechAnalysisJson)
                 } else {
-                    Log.d("InterviewWait", "데이터가 아직 불완전함(AI 생성 중). 2초 뒤 재시도...")
-                    Handler(Looper.getMainLooper()).postDelayed({
-
-                        checkFeedbackReadyAndNavigate(sessionId, speechAnalysisJson)
-                    }, 2000)
+                    if (retryCount < MAX_RETRY) {
+                        retryCount++
+                        Log.d("InterviewWait", "서버가 리포트를 생성하고 있습니다. ($retryCount/$MAX_RETRY) 2초 뒤 재시도...")
+                        handler.postDelayed({
+                            checkFeedbackReadyAndNavigate(sessionId, speechAnalysisJson)
+                        }, 2000)
+                    } else {
+                        Log.e("InterviewWait", "❌ 리포트 생성 대기 시간 초과로 강제 화면 이동 유도")
+                        Toast.makeText(this@InterviewChatActivity, "분석 완료 처리가 지연되고 있습니다. 잠시 후 결과창을 확인해 주세요.", Toast.LENGTH_LONG).show()
+                        navigateToResultActivity(sessionId, null, speechAnalysisJson)
+                    }
                 }
             }
 
-            override fun onFailure(call: Call<com.example.cac.network.InterviewResultResponse>, t: Throwable) {
+            override fun onFailure(call: Call<InterviewResultResponse>, t: Throwable) {
                 Log.e("InterviewWait", "네트워크 통신 실패: ${t.message}")
-
                 navigateToResultActivity(sessionId, null, speechAnalysisJson)
             }
         })
@@ -567,7 +577,6 @@ class InterviewChatActivity : AppCompatActivity() {
     ) {
         val intent = Intent(this@InterviewChatActivity, InterviewResultActivity::class.java)
         intent.putExtra("session_id", sessionId)
-
 
         if (!feedbackJson.isNullOrBlank()) {
             intent.putExtra("interview_result_json", feedbackJson)
@@ -606,6 +615,7 @@ class InterviewChatActivity : AppCompatActivity() {
             mediaRecorder?.stop()
             mediaRecorder?.release()
         } catch (e: Exception) {
+            e.printStackTrace()
         }
         mediaRecorder = null
     }

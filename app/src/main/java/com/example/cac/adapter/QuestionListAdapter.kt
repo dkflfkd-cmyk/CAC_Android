@@ -11,7 +11,7 @@ import com.example.cac.data.QuestionItem
 
 class QuestionListAdapter(
     private val items: List<QuestionItem>,
-    private val onStartClick: (QuestionItem) -> Unit // 👈 Int에서 QuestionItem으로 변경
+    private val onStartClick: (QuestionItem) -> Unit
 ) : RecyclerView.Adapter<QuestionListAdapter.QuestionViewHolder>() {
 
     inner class QuestionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
