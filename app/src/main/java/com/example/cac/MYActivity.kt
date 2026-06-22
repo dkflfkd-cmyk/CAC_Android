@@ -40,7 +40,7 @@ loadMeAndApply()
         rvInterview.layoutManager = LinearLayoutManager(this)
         rvResume.layoutManager = LinearLayoutManager(this)
 
-// 일단 테스트 더미데이터 (서버 붙이기 전)
+// 일단 테스트 더미데이터
         val interviewList = listOf(
             InterviewItem("2025.01.08", "질문 5개 / 소요시간 15분", 82),
             InterviewItem("2025.01.06", "질문 5개 / 소요시간 16분", 78),
@@ -56,6 +56,12 @@ loadMeAndApply()
         rvResume.adapter = ResumeAdapter(resumeList)
 
 //면접 기록 끝
+
+        val btnInterview = findViewById<TextView>(R.id.btnInterview)
+        btnInterview.setOnClickListener {
+            val intent = Intent(this, InterviewActivity::class.java)
+            startActivity(intent)
+        }
 
         val btnhome = findViewById<TextView>(R.id.btnNoticeh)
         btnhome.setOnClickListener {

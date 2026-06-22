@@ -43,7 +43,6 @@ class cardRoadmapActivity : AppCompatActivity() {
 
         // 학습추천 버튼
         findViewById<TextView>(R.id.btnhs).setOnClickListener {
-            // 아직 액티비티가 없다면 주석 처리 유지
             // startActivity(Intent(this, StudyActivity::class.java))
         }
     }

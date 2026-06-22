@@ -300,7 +300,7 @@
 
 
         <TextView
-            android:id="@+id/btnNoticej"
+            android:id="@+id/btnInterview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -308,7 +308,7 @@
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
 
-            android:text="공고"
+            android:text="AI면접"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold"
