@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cac.R
-import com.example.cac.data.ResumeItem
+import com.example.cac.network.ResumeItem
 
 class ResumeAdapter(
     private val items: List<ResumeItem>
@@ -26,7 +26,9 @@ class ResumeAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
+        android.util.Log.d("AdapterDebug", "Position $position 데이터: $item")
         holder.txtFileName.text = item.fileName
-        holder.txtDate.text = item.date
+        val rawDate = item.date ?: ""
+        holder.txtDate.text = rawDate.substringBefore("T")
     }
 }

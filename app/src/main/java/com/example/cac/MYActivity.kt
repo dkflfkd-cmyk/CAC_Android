@@ -15,18 +15,21 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cac.data.InterviewItem
-import com.example.cac.data.ResumeItem
 import com.example.cac.ui.adapter.InterviewAdapter
 import com.example.cac.ui.adapter.ResumeAdapter
 import com.example.cac.SessionManager
 import com.example.cac.network.RetrofitClient
+import com.example.cac.ui.adapter.SavedQuestionAdapter
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+
 class MYActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_myactivity)
 
-loadMeAndApply()
+
         //확인
         android.util.Log.d("MY_DEBUG", "calling loadMeAndApply()")
         loadMeAndApply()
@@ -40,20 +43,9 @@ loadMeAndApply()
         rvInterview.layoutManager = LinearLayoutManager(this)
         rvResume.layoutManager = LinearLayoutManager(this)
 
-// 일단 테스트 더미데이터
-        val interviewList = listOf(
-            InterviewItem("2025.01.08", "질문 5개 / 소요시간 15분", 82),
-            InterviewItem("2025.01.06", "질문 5개 / 소요시간 16분", 78),
-            InterviewItem("2025.01.02", "질문 5개 / 소요시간 14분", 75)
-        )
 
-        val resumeList = listOf(
-            ResumeItem("2026.01.20 이력서.pdf", "2026.01.20"),
-            ResumeItem("2025.03.15 이력서.pdf", "2025.03.15")
-        )
 
-        rvInterview.adapter = InterviewAdapter(interviewList)
-        rvResume.adapter = ResumeAdapter(resumeList)
+
 
 //면접 기록 끝
 
@@ -122,6 +114,61 @@ loadMeAndApply()
 
     }
 
+
+
+
+
+    private fun loadResumes() {
+        val token = SessionManager.getToken(this) ?: return
+        val authHeader = "Bearer $token"
+
+        lifecycleScope.launch {
+            try {
+
+                val response = RetrofitClient.api.getResumes(authHeader)
+                val fullList = response.resumes ?: emptyList()
+
+
+                val previewList = fullList.take(3)
+
+                val rvResume = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvResume)
+
+
+                rvResume.adapter = ResumeAdapter(previewList)
+
+            } catch (e: Exception) {
+                android.util.Log.e("API_ERROR", "이력서 로드 실패: ${e.message}")
+            }
+        }
+    }
+    private fun loadInterviews() {
+        val token = SessionManager.getToken(this) ?: return
+        val authHeader = "Bearer $token"
+
+        lifecycleScope.launch {
+            try {
+
+                val response = RetrofitClient.api.getInterviews(authHeader)
+
+
+                val list = response.interviews?.map { item ->
+                    InterviewItem(
+                        date = item.created_at ?: "날짜 미정",
+                        meta = "${item.target_job ?: "직무 미정"} / ${item.session_id ?: 0}번",
+                        score = item.overall_score ?: 0
+                    )
+                } ?: emptyList()
+
+
+                val rvInterview = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvInterview)
+                rvInterview.adapter = InterviewAdapter(list.take(3))
+
+            } catch (e: Exception) {
+                android.util.Log.e("API_ERROR", "면접 기록 로드 실패: ${e.message}")
+            }
+        }
+    }
+
     private fun loadMeAndApply() {
 
         //확인
@@ -129,6 +176,8 @@ loadMeAndApply()
 
 
         val token = SessionManager.getToken(this)
+
+
 
         if (token.isNullOrBlank()) {
             android.util.Log.d("ME_RESPONSE", "토큰 없음")
@@ -149,6 +198,12 @@ loadMeAndApply()
 
                     val body = response.body()
                     android.util.Log.d("ME_RESPONSE", body.toString())
+
+                    val userId = body?.get("user_id")?.toString() ?: return
+                   // checkServerResponse(userId)
+                    loadSavedQuestions(userId)
+                    loadResumes()
+                    loadInterviews()
 
                     val username = body?.get("username")?.toString()
                     val grade = body?.get("grade")?.toString()
@@ -177,4 +232,73 @@ loadMeAndApply()
             })
     }
 
+
+
+    private fun checkServerResponse(userId: String) {
+        val token = SessionManager.getToken(this)
+        if (token == null) {
+            android.util.Log.e("API_ERROR", "토큰이 없습니다. 로그인을 다시 해주세요.")
+            return
+        }
+
+        val authHeader = "Bearer $token"
+
+        // 1. 코루틴으로 감싸기
+        lifecycleScope.launch {
+            try {
+                // 2. enqueue 없이 직접 호출 (결과를 바로 리스트로 받음)
+                val list = RetrofitClient.api.getSavedQuestions(authHeader, userId)
+
+                val rv = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvSavedQuestions)
+                val txtEmpty = findViewById<android.widget.TextView>(R.id.txtEmptyView)
+
+                android.util.Log.d("API_DEBUG", "서버 응답 리스트 크기: ${list.size}")
+
+                if (list.isEmpty()) {
+                    txtEmpty.visibility = android.view.View.VISIBLE
+                    rv.visibility = android.view.View.GONE
+                } else {
+                    txtEmpty.visibility = android.view.View.GONE
+                    rv.visibility = android.view.View.VISIBLE
+                    // 레이아웃 매니저가 설정되지 않았다면 설정
+                    if (rv.layoutManager == null) {
+                        rv.layoutManager = LinearLayoutManager(this@MYActivity)
+                    }
+                    rv.adapter = SavedQuestionAdapter(list)
+                }
+            } catch (e: Exception) {
+                // 3. 에러 발생 시 처리 (onFailure 대신 try-catch)
+                android.util.Log.e("API_DEBUG", "연결 에러: ${e.message}")
+                findViewById<android.widget.TextView>(R.id.txtEmptyView).visibility = android.view.View.VISIBLE
+                findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvSavedQuestions).visibility = android.view.View.GONE
+            }
+        }
+    }
+    private fun loadSavedQuestions(userId: String) {
+        val token = SessionManager.getToken(this) ?: return
+        val authHeader = "Bearer $token"
+
+        lifecycleScope.launch {
+            try {
+
+                val list = RetrofitClient.api.getSavedQuestions(authHeader, userId)
+
+                val rv = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvSavedQuestions)
+                val txtEmpty = findViewById<android.widget.TextView>(R.id.txtEmptyView)
+
+                if (list.isEmpty()) {
+                    txtEmpty.visibility = android.view.View.VISIBLE
+                    rv.visibility = android.view.View.GONE
+                } else {
+                    txtEmpty.visibility = android.view.View.GONE
+                    rv.visibility = android.view.View.VISIBLE
+                    rv.layoutManager = LinearLayoutManager(this@MYActivity)
+                    rv.adapter = SavedQuestionAdapter(list)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("API_ERROR", "질문 로드 실패: ${e.message}")
+                findViewById<android.widget.TextView>(R.id.txtEmptyView).visibility = android.view.View.VISIBLE
+            }
+        }
+    }
 }

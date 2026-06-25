@@ -45,6 +45,13 @@ interface ApiService {
     @GET("resumes/{resume_id}/analysis/public")
     fun getAnalysisPublic(@Path("resume_id") resumeId: Int): Call<ResponseBody>
 
+
+    // 마이페이지
+    @GET("auth/me/resumes")
+    suspend fun getResumes(@Header("Authorization") token: String): ResumeResponse
+    @GET("auth/me/interviews")
+    suspend fun getInterviews(@Header("Authorization") token: String): InterviewResponse
+
     // 대시보드
     @GET("users/me/dashboard")
     fun getDashboard(@Header("Authorization") token: String): Call<DashboardResponse>
@@ -58,7 +65,9 @@ interface ApiService {
 
     // AI 질문 생성
     @POST("api/v1/sessions/{session_id}/generate-questions")
-    fun generateQuestions(@Path("session_id") sessionId: Int): Call<List<GeneratedQuestion>>
+    fun generateQuestions(
+        @Path("session_id") sessionId: Int
+    ): Call<List<GeneratedQuestion>>
 
     // 세션별 질문 전체 조회
     @GET("api/v1/sessions/{session_id}/questions")
@@ -70,7 +79,9 @@ interface ApiService {
 
     // 질문저장(즐겨찾기)
     @PATCH("api/v1/questions/{question_id}")
-    fun toggleSaveQuestion(@Path("question_id") questionId: Int): Call<Map<String, Any>>
+    fun toggleSaveQuestion(
+        @Path("question_id") questionId: Int
+    ): Call<Map<String, Any>>
 
     // 답변 제출 및 분석
     @Multipart
@@ -84,7 +95,9 @@ interface ApiService {
 
     // 피드백 요약
     @GET("api/v1/sessions/{session_id}/summary")
-    fun getSessionSummary(@Path("session_id") sessionId: Int): Call<ResponseBody>
+    fun getSessionSummary(
+        @Path("session_id") sessionId: Int
+    ): Call<ResponseBody>
 
     // 발화 분석 API
     @Multipart
@@ -99,6 +112,21 @@ interface ApiService {
     fun getInterviewResult(
         @Path("session_id") sessionId: Int
     ): Call<InterviewResultResponse>
+
+
+    // 확인용
+    @GET("api/v1/users/{user_id}/saved-questions")
+    fun getSavedQuestionsRaw(
+        @Path("user_id")
+        userId: String
+    ): Call<okhttp3.ResponseBody>
+
+    // 질문 저장
+    @GET("api/v1/users/{user_id}/saved-questions")
+    suspend fun getSavedQuestions(
+        @Header("Authorization") token: String,
+        @Path("user_id") userId: String
+    ): List<String>
 
     //종합 면접채팅 발화
     @GET("api/v1/interview/sessions/{session_id}/analyze-speech")
@@ -255,7 +283,28 @@ data class InterviewHistoryResponse(
 
 
 
+//마이페이지------------------------
+data class ResumeResponse(
+    val resumes: List<ResumeItem>,
+    val resume_total: Int,
+    val resume_has_more: Boolean
+)
 
+data class ResumeItem(
+    @SerializedName("original_filename") val fileName: String,
+    @SerializedName("created_at") val date: String
+)
+data class InterviewItem(
+    val session_id: Int?,
+    val target_job: String?,
+    val created_at: String?,
+    val overall_score: Int?
+)
+
+data class InterviewResponse(
+    val interviews: List<InterviewItem>?
+)
+//---------------------------
 data class InterviewSessionRequest(
     val user_id: String,
     val target_job: String

@@ -28,7 +28,8 @@ class InterviewAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
-        holder.txtDate.text = item.date
+        val dateOnly = item.date.substringBefore("T")
+        holder.txtDate.text = dateOnly
         holder.txtDetail.text = item.meta
         holder.txtScore.text = "${item.score}점"
     }
