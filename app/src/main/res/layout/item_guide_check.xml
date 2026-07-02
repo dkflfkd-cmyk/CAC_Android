@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="54dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="8dp"
+    android:paddingStart="5dp"
+    android:background="@drawable/bg_white_item">
+
+    <CheckBox
+        android:id="@+id/cbGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:buttonTint="#3950E7"
+
+        android:checked="false" />
+
+    <TextView
+        android:id="@+id/tvGuideText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="내용이 들어갈 자리"
+        android:textColor="#3950E7"
+        android:textSize="14sp"
+
+        />
+
+</LinearLayout>

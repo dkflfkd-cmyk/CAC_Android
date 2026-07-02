@@ -9,7 +9,8 @@ import com.example.cac.R
 import com.example.cac.data.InterviewItem
 
 class InterviewAdapter(
-    private val items: List<InterviewItem>
+    private val items: List<InterviewItem>,
+    private val onClick: (InterviewItem) -> Unit
 ) : RecyclerView.Adapter<InterviewAdapter.VH>() {
 
     class VH(v: View) : RecyclerView.ViewHolder(v) {
@@ -32,5 +33,8 @@ class InterviewAdapter(
         holder.txtDate.text = dateOnly
         holder.txtDetail.text = item.meta
         holder.txtScore.text = "${item.score}점"
+        holder.itemView.setOnClickListener {
+            onClick(item) // 클릭 시 넘어온 함수 실행
+        }
     }
 }

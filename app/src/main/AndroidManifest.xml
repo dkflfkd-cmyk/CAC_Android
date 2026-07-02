@@ -46,7 +46,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".DetailActivity" />
 
+        <activity android:name=".AllInterviewActivity" />
+        <activity android:name=".AllResumeActivity" />
 
         <activity
             android:name=".InterviewResultActivity"

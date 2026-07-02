@@ -29,6 +29,17 @@ class MYActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_myactivity)
 
+        //면접 기록 전체 보기 버튼
+        findViewById<TextView>(R.id.btnInterviewAll).setOnClickListener {
+            val intent = Intent(this, AllInterviewActivity::class.java)
+            startActivity(intent)
+        }
+
+        // 이력서 기록 전체 보기 버튼
+        findViewById<TextView>(R.id.btnResumeAll).setOnClickListener {
+            val intent = Intent(this, AllResumeActivity::class.java)
+            startActivity(intent)
+        }
 
         //확인
         android.util.Log.d("MY_DEBUG", "calling loadMeAndApply()")
@@ -141,27 +152,35 @@ class MYActivity : AppCompatActivity() {
             }
         }
     }
+    // MYActivity.kt 파일
     private fun loadInterviews() {
         val token = SessionManager.getToken(this) ?: return
         val authHeader = "Bearer $token"
 
         lifecycleScope.launch {
             try {
-
                 val response = RetrofitClient.api.getInterviews(authHeader)
 
 
                 val list = response.interviews?.map { item ->
-                    InterviewItem(
+                    com.example.cac.data.InterviewItem(
+                        session_id = item.session_id ?: -1,
                         date = item.created_at ?: "날짜 미정",
                         meta = "${item.target_job ?: "직무 미정"} / ${item.session_id ?: 0}번",
-                        score = item.overall_score ?: 0
+                        score = item.overall_score ?: 0,
+                        feedback = item.feedback, // 서버 데이터의 피드백을 UI용 데이터로 복사
+                        pdf_url = item.pdf_url    // 서버 데이터의 URL을 UI용 데이터로 복사
                     )
                 } ?: emptyList()
 
-
                 val rvInterview = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvInterview)
-                rvInterview.adapter = InterviewAdapter(list.take(3))
+
+
+                rvInterview.adapter = InterviewAdapter(list.take(3)) { selectedItem ->
+                    val intent = Intent(this@MYActivity, DetailActivity::class.java)
+                    intent.putExtra("ITEM_DATA", selectedItem)
+                    startActivity(intent)
+                }
 
             } catch (e: Exception) {
                 android.util.Log.e("API_ERROR", "면접 기록 로드 실패: ${e.message}")
@@ -200,8 +219,13 @@ class MYActivity : AppCompatActivity() {
                     android.util.Log.d("ME_RESPONSE", body.toString())
 
                     val userId = body?.get("user_id")?.toString() ?: return
-                   // checkServerResponse(userId)
-                    loadSavedQuestions(userId)
+
+                    val sessionId = intent.getIntExtra("session_id", -1) // -1은 기본값
+
+                    if (sessionId != -1) {
+                        loadSavedQuestions(sessionId) // 함수 호출
+                    } else {}
+
                     loadResumes()
                     loadInterviews()
 
@@ -274,14 +298,14 @@ class MYActivity : AppCompatActivity() {
             }
         }
     }
-    private fun loadSavedQuestions(userId: String) {
+    private fun loadSavedQuestions(sessionId: Int) { // 파라미터를 sessionId로 변경
         val token = SessionManager.getToken(this) ?: return
         val authHeader = "Bearer $token"
 
         lifecycleScope.launch {
             try {
-
-                val list = RetrofitClient.api.getSavedQuestions(authHeader, userId)
+                // 이제 수정된 API 함수를 호출합니다
+                val list = RetrofitClient.api.getQuestions(authHeader, sessionId)
 
                 val rv = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvSavedQuestions)
                 val txtEmpty = findViewById<android.widget.TextView>(R.id.txtEmptyView)
@@ -292,12 +316,13 @@ class MYActivity : AppCompatActivity() {
                 } else {
                     txtEmpty.visibility = android.view.View.GONE
                     rv.visibility = android.view.View.VISIBLE
+                    // 어댑터 연결 (가져온 list 전달)
                     rv.layoutManager = LinearLayoutManager(this@MYActivity)
                     rv.adapter = SavedQuestionAdapter(list)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("API_ERROR", "질문 로드 실패: ${e.message}")
-                findViewById<android.widget.TextView>(R.id.txtEmptyView).visibility = android.view.View.VISIBLE
+                // 에러 처리
             }
         }
     }

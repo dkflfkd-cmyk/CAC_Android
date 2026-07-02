@@ -1,0 +1,11 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView android:id="@+id/tvTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="면접 상세 결과" android:textSize="20sp" />
+    <TextView android:id="@+id/tvScore" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="점수: -" />
+    <TextView android:id="@+id/tvFeedback" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="피드백 내용이 여기에 나옵니다." />
+
+</LinearLayout>

@@ -46,6 +46,11 @@ interface ApiService {
     fun getAnalysisPublic(@Path("resume_id") resumeId: Int): Call<ResponseBody>
 
 
+    //커리어경로
+    @POST("/recommend")
+    fun getCareerRoadmap(@Body request: Any): Call<RoadmapResponse>
+
+
     // 마이페이지
     @GET("auth/me/resumes")
     suspend fun getResumes(@Header("Authorization") token: String): ResumeResponse
@@ -120,6 +125,13 @@ interface ApiService {
         @Path("user_id")
         userId: String
     ): Call<okhttp3.ResponseBody>
+
+
+    @GET("api/v1/sessions/{session_id}/questions")
+    suspend fun getQuestions(
+        @Header("Authorization") authHeader: String,
+        @Path("session_id") sessionId: Int
+    ): List<Question>
 
     // 질문 저장
     @GET("api/v1/users/{user_id}/saved-questions")
@@ -294,17 +306,40 @@ data class ResumeItem(
     @SerializedName("original_filename") val fileName: String,
     @SerializedName("created_at") val date: String
 )
-data class InterviewItem(
+data class ApiInterviewItem(
     val session_id: Int?,
     val target_job: String?,
     val created_at: String?,
-    val overall_score: Int?
+    val overall_score: Int?,
+    val feedback: String?,
+    val pdf_url: String?
 )
 
 data class InterviewResponse(
-    val interviews: List<InterviewItem>?
+    val interviews: List<ApiInterviewItem>?
+)
+//질문리스트
+data class Question(
+    @SerializedName("id") val id: Int,
+    @SerializedName("content") val content: String
 )
 //---------------------------
+
+//커리어경로------------------------
+// 단계별 데이터
+data class Stage(
+    val stage_level: Int,
+    val stage_name: String,
+    val recommendations: List<String>
+)
+
+// 전체 응답
+data class RoadmapResponse(
+    val roadmap_title: String,
+    val stages: List<Stage>
+)
+
+//-------------------------------------
 data class InterviewSessionRequest(
     val user_id: String,
     val target_job: String

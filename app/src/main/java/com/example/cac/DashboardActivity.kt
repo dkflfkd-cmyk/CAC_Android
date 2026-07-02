@@ -26,6 +26,7 @@ import com.example.cac.network.DashboardHistory
 import com.example.cac.network.DashboardResponse
 import com.example.cac.network.RetrofitClient
 import com.example.cac.ui.adapter.InterviewAdapter
+import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.RadarChart
 import com.github.mikephil.charting.components.XAxis
@@ -65,6 +66,7 @@ class DashboardActivity : AppCompatActivity() {
         setupLearningTodoFromPrefs()
         setupRadarFromPrefs()
         loadDashboard()
+//        loadRecentInterviews()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -104,16 +106,23 @@ class DashboardActivity : AppCompatActivity() {
     private fun setupRecentInterview() {
         val rvRecentInterview = findViewById<RecyclerView>(R.id.rvRecentInterview)
 
+
         val interviewList = listOf(
-            InterviewItem("2025.01.08", "질문 5개 / 소요시간 15분", 82),
-            InterviewItem("2025.01.06", "질문 5개 / 소요시간 16분", 78),
-            InterviewItem("2025.01.02", "질문 5개 / 소요시간 14분", 75),
-            InterviewItem("2024.12.28", "질문 3개 / 소요시간 10분", 72),
-            InterviewItem("2024.12.25", "질문 5개 / 소요시간 15분", 70)
+            InterviewItem(1, "2025.01.08", "질문 5개 / 소요시간 15분", 82),
+            InterviewItem(2, "2025.01.06", "질문 5개 / 소요시간 16분", 78),
+            InterviewItem(3, "2025.01.02", "질문 5개 / 소요시간 14분", 75),
+            InterviewItem(4, "2024.12.28", "질문 3개 / 소요시간 10분", 72),
+            InterviewItem(5, "2024.12.25", "질문 5개 / 소요시간 15분", 70)
         )
 
         rvRecentInterview.layoutManager = LinearLayoutManager(this)
-        rvRecentInterview.adapter = InterviewAdapter(interviewList.take(5))
+
+
+        rvRecentInterview.adapter = InterviewAdapter(interviewList.take(3)) { selectedItem ->
+            val intent = Intent(this@DashboardActivity, DetailActivity::class.java)
+            intent.putExtra("ITEM_DATA", selectedItem)
+            startActivity(intent)
+        }
     }
 
     private fun setupTitle() {
@@ -167,6 +176,46 @@ class DashboardActivity : AppCompatActivity() {
                 }
             })
     }
+
+    // DashboardActivity.kt 안에 추가
+//    private fun loadRecentInterviews() {
+//        val token = Session.accessToken ?: return
+//
+//        lifecycleScope.launch {
+//            try {
+//                // 1. 서버에서 면접 리스트 전체 가져오기[cite: 1]
+//                val response = RetrofitClient.api.getInterviews("Bearer $token")
+//
+//                // 2. 서버 데이터를 UI용 InterviewItem으로 변환
+//                val list = response.interviews?.map { item ->
+//                    com.example.cac.data.InterviewItem(
+//                        session_id = item.session_id ?: -1,
+//                        date = item.created_at ?: "날짜 미정",
+//                        meta = "${item.target_job ?: "직무 미정"} / ${item.session_id ?: 0}번",
+//                        score = item.overall_score ?: 0,
+//                        feedback = item.feedback,
+//                        pdf_url = item.pdf_url
+//                    )
+//                } ?: emptyList()
+//
+//                // 3. 어댑터에 3개만 전달하여 표시
+//                val rvRecentInterview = findViewById<RecyclerView>(R.id.rvRecentInterview)
+//                rvRecentInterview.layoutManager = LinearLayoutManager(this@DashboardActivity)
+//                rvRecentInterview.adapter = InterviewAdapter(list.take(3)) { selectedItem ->
+//                    // 클릭 시 DetailActivity로 이동하는 로직도 동일하게 추가 가능
+//                    val intent = Intent(this@DashboardActivity, DetailActivity::class.java)
+//                    intent.putExtra("ITEM_DATA", selectedItem)
+//                    startActivity(intent)
+//                }
+//
+//            } catch (e: Exception) {
+//                Log.e("DASHBOARD", "최근 면접 데이터 로드 실패: ${e.message}")
+//            }
+//        }
+//    }
+
+
+
 
     private fun applyDashboard(data: DashboardResponse) {
         txtAvgDocumentScore.text = ((data.avg_document_score ?: 0.0).toInt()).toString()
