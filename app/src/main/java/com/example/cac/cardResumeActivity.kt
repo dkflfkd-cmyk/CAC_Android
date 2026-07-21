@@ -40,6 +40,7 @@ import androidx.core.content.res.ResourcesCompat
 class cardResumeActivity : AppCompatActivity() {
     private fun appFont(fontRes: Int) = ResourcesCompat.getFont(this, fontRes)
     private lateinit var txtAnalyze: TextView
+    private var isHistoryDetailMode = false
     private var pollingTry = 0
     private val pollingMax = 20
     private val pollingDelayMs = 2000L
@@ -100,6 +101,7 @@ class cardResumeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_card_resume)
 
+        setupSideMenu()
 
         //양식버튼 클릭
 
@@ -208,6 +210,11 @@ class cardResumeActivity : AppCompatActivity() {
 
         showEmptyState()
         hideResultSection()
+
+        val historyResumeId = intent.getIntExtra("resume_id", -1)
+        if (historyResumeId != -1) {
+            showHistoryResultMode(historyResumeId)
+        }
 
         btnPickFile.setOnClickListener {
             pickFileLauncher.launch(arrayOf("application/pdf"))
@@ -347,6 +354,42 @@ class cardResumeActivity : AppCompatActivity() {
         txtResult.text = ""
     }
 
+    private fun showHistoryResultMode(resumeId: Int) {
+        isHistoryDetailMode = true
+        findViewById<View>(R.id.uploadSection).visibility = View.GONE
+        resultSection.visibility = View.VISIBLE
+        txtResult.visibility = View.VISIBLE
+        txtResult.text = "결과 조회 중..."
+        txtAnalyze.text = "AI분석"
+        btnAnalyzeCircle.isEnabled = false
+
+        RetrofitClient.api.getAnalysisPublic(resumeId)
+            .enqueue(object : retrofit2.Callback<okhttp3.ResponseBody> {
+                override fun onResponse(
+                    call: retrofit2.Call<okhttp3.ResponseBody>,
+                    response: retrofit2.Response<okhttp3.ResponseBody>
+                ) {
+                    if (!response.isSuccessful) {
+                        txtResult.text = "이력서 분석 결과를 불러오지 못했습니다."
+                        return
+                    }
+
+                    val raw = response.body()?.string().orEmpty()
+                    if (raw.isBlank()) {
+                        txtResult.text = "표시할 이력서 분석 결과가 없습니다."
+                        return
+                    }
+
+                    applyResultFromRaw(raw)
+                    scrollContent.post { scrollContent.smoothScrollTo(0, resultSection.top) }
+                }
+
+                override fun onFailure(call: retrofit2.Call<okhttp3.ResponseBody>, t: Throwable) {
+                    txtResult.text = "이력서 분석 결과를 불러오지 못했습니다."
+                }
+            })
+    }
+
     private fun showPickedState(uri: Uri) {
         txtFileName.text = queryDisplayName(uri) ?: "선택한 파일"
         fileRow.visibility = View.VISIBLE
@@ -378,7 +421,7 @@ class cardResumeActivity : AppCompatActivity() {
     private fun requestAnalyze(resumeId: Int) {
         Log.d("ANALYZE", "requestAnalyze called, resumeId=$resumeId")
 
-        val token = Session.accessToken
+        val token = SessionManager.getToken(this) ?: Session.accessToken
         if (token.isNullOrBlank()) {
             txtResult.text = "토큰 없음"
             txtAnalyze.text = "AI분석"
@@ -468,6 +511,11 @@ class cardResumeActivity : AppCompatActivity() {
         val ok = tryApplyResultJson(raw)
         if (!ok) {
             Log.d("RESULT_PARSE", "applyResultFromRaw failed, raw=$raw")
+            if (isHistoryDetailMode) {
+                txtResult.visibility = View.VISIBLE
+                txtResult.text = "이력서 분석 결과 형식을 읽지 못했습니다."
+                return
+            }
             showDummyResult()
             txtResult.text = raw
             txtAnalyze.text = "AI분석"
@@ -525,8 +573,10 @@ class cardResumeActivity : AppCompatActivity() {
             val root = JSONObject(raw)
 
 
-            val resultObj = root.optJSONObject("result")
-            val resumeObj = resultObj?.optJSONObject("resume")
+            val resultObj = root.optJSONObject("result_json")
+                ?: root.optJSONObject("result")
+                ?: root
+            val resumeObj = resultObj.optJSONObject("resume") ?: resultObj
 
 //종합
             val jobFit = resultObj?.optJSONObject("score_breakdown")?.optInt("job_fit", 0) ?: 0
@@ -537,7 +587,7 @@ class cardResumeActivity : AppCompatActivity() {
 
 
 // 자소서
-            val coverObj = resultObj?.optJSONObject("cover_letter")
+            val coverObj = resultObj.optJSONObject("cover_letter") ?: resumeObj.optJSONObject("cover_letter")
 
             val coverScore = coverObj?.optInt("score", 0) ?: 0
 
@@ -609,8 +659,8 @@ class cardResumeActivity : AppCompatActivity() {
 
 
             //이력서 결과
-            val hasResume = resultObj?.optBoolean("has_resume", false) ?: false
-            val hasCoverLetter = resultObj?.optBoolean("has_cover_letter", false) ?: false
+            val hasResume = resultObj.optBoolean("has_resume", true)
+            val hasCoverLetter = resultObj.optBoolean("has_cover_letter", coverObj != null)
 
             //확인
             Log.d("CHECK_DOC_TYPE", "hasResume=$hasResume, hasCoverLetter=$hasCoverLetter")

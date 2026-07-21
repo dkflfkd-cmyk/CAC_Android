@@ -9,7 +9,8 @@ import com.example.cac.R
 import com.example.cac.network.ResumeItem
 
 class ResumeAdapter(
-    private val items: List<ResumeItem>
+    private val items: List<ResumeItem>,
+    private val onClick: (ResumeItem) -> Unit = {}
 ) : RecyclerView.Adapter<ResumeAdapter.VH>() {
 
     class VH(v: View) : RecyclerView.ViewHolder(v) {
@@ -26,9 +27,12 @@ class ResumeAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
-        android.util.Log.d("AdapterDebug", "Position $position 데이터: $item")
+        val date = item.date?.substringBefore("T")?.ifBlank { null } ?: "날짜 미정"
+        val meta = listOfNotNull(item.targetJob?.takeIf { it.isNotBlank() }, date).joinToString(" · ")
+
         holder.txtFileName.text = item.fileName
-        val rawDate = item.date ?: ""
-        holder.txtDate.text = rawDate.substringBefore("T")
+        holder.txtDate.text = meta
+        holder.itemView.isClickable = true
+        holder.itemView.setOnClickListener { onClick(item) }
     }
 }

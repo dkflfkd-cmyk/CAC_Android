@@ -49,7 +49,9 @@
         <activity android:name=".DetailActivity" />
 
         <activity android:name=".AllInterviewActivity" />
+        <activity android:name=".AllSavedQuestionsActivity" />
         <activity android:name=".AllResumeActivity" />
+        <activity android:name=".ResumeDetailActivity" />
 
         <activity
             android:name=".InterviewResultActivity"

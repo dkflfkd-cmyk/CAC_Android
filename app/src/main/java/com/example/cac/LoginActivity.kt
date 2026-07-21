@@ -22,23 +22,6 @@ class LoginActivity : AppCompatActivity() {
 //        startActivity(Intent(this, MainActivity::class.java))
 //        finish()
 //----------------------------------
-        val savedToken = SessionManager.getToken(this)
-        if (!savedToken.isNullOrBlank()) {
-            Session.accessToken = savedToken
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-            return
-        }
-
-
-        //  이미 로그인(토큰 있음) 상태면 메인으로
-        if (SessionManager.isLoggedIn(this) && !Session.accessToken.isNullOrBlank()) {
-            Session.accessToken = SessionManager.getToken(this)
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-            return
-        }
-
         val edtId = findViewById<EditText>(R.id.edtId)
         val edtPw = findViewById<EditText>(R.id.edtPw)
         val btnLogin = findViewById<TextView>(R.id.btnLogin)
@@ -115,5 +98,37 @@ class LoginActivity : AppCompatActivity() {
         btnFindPw.setOnClickListener {
             startActivity(Intent(this, FindPwActivity::class.java))
         }
+
+        val savedToken = SessionManager.getToken(this)
+        if (!savedToken.isNullOrBlank()) {
+            validateSavedSession(savedToken)
+        }
+    }
+
+    private fun validateSavedSession(token: String) {
+        Session.accessToken = token
+        RetrofitClient.api.me("Bearer $token")
+            .enqueue(object : Callback<Map<String, Any>> {
+                override fun onResponse(
+                    call: Call<Map<String, Any>>,
+                    response: Response<Map<String, Any>>
+                ) {
+                    if (response.isSuccessful) {
+                        startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                        finish()
+                        return
+                    }
+
+                    if (response.code() == 401 || response.code() == 403) {
+                        Session.accessToken = null
+                        SessionManager.logout(this@LoginActivity)
+                        Toast.makeText(this@LoginActivity, "로그인이 만료되었습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                    Toast.makeText(this@LoginActivity, "자동 로그인 확인에 실패했습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show()
+                }
+            })
     }
 }

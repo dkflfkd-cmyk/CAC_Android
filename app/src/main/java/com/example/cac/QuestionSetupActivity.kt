@@ -70,6 +70,7 @@ class QuestionSetupActivity : AppCompatActivity() {
 //        }
 
         setContentView(R.layout.activity_question_setup)
+        setupSideMenu()
         findView() // 변수 초기화
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -110,8 +111,13 @@ class QuestionSetupActivity : AppCompatActivity() {
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    val sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-                    val loginUserId = sharedPref.getString("user_id", "sample04") ?: "sample04"
+                    val loginUserId = SessionManager.getUserId(this@QuestionSetupActivity)
+                    if (loginUserId.isNullOrBlank()) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@QuestionSetupActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                        }
+                        return@launch
+                    }
 
 
                     val request = SessionRequest(

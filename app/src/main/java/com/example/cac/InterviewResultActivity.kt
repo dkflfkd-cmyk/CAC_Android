@@ -43,6 +43,7 @@ class InterviewResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_interview_result)
 
+        setupSideMenu()
         setupTitle()
 
         radarChart = findViewById(R.id.radarChart)
@@ -76,9 +77,12 @@ class InterviewResultActivity : AppCompatActivity() {
         }
 
 
-        val sharedPref = getSharedPreferences("CacPrefs", MODE_PRIVATE)
-        val userId = sharedPref.getString("user_id", "test1414") ?: "test1414"
-        loadGrowthTrendFromServer(userId)
+        val userId = SessionManager.getUserId(this)
+        if (!userId.isNullOrBlank()) {
+            loadGrowthTrendFromServer(userId)
+        } else {
+            Log.e("GrowthTrend", "로그인된 user_id가 없어 성장 추이를 불러오지 않습니다.")
+        }
 
         // 하단 네비게이션
 

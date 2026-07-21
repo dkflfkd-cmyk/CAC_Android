@@ -50,6 +50,7 @@ class QuestionListActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_question_list)
 
+        setupSideMenu()
         // 뷰 초기화
         progressBar = findViewById(R.id.progressQuestion)
         txtProgress = findViewById(R.id.txtProgress)
@@ -58,6 +59,7 @@ class QuestionListActivity : AppCompatActivity() {
         dot1 = findViewById(R.id.dot1)
         dot2 = findViewById(R.id.dot2)
         dot3 = findViewById(R.id.dot3)
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRecreateQuestions).visibility = View.GONE
 
         startLoadingAnimation()
 
@@ -84,13 +86,21 @@ class QuestionListActivity : AppCompatActivity() {
                 ) {
                     if (response.isSuccessful) {
                         fetchQuestionsFromServer(sessionId, count)
+                    } else {
+                        stopLoadingAnimation()
+                        Toast.makeText(this@QuestionListActivity, "질문을 생성하지 못했습니다.", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: retrofit2.Call<List<com.example.cac.data.GeneratedQuestion>>, t: Throwable) {
                     android.util.Log.e("API_CHECK", "통신 오류", t)
+                    stopLoadingAnimation()
+                    Toast.makeText(this@QuestionListActivity, "질문을 생성하지 못했습니다.", Toast.LENGTH_SHORT).show()
                 }
             })
+        } else {
+            stopLoadingAnimation()
+            Toast.makeText(this, "질문 세션을 찾지 못했습니다.", Toast.LENGTH_SHORT).show()
         }
 
         setupTitle()
@@ -141,7 +151,7 @@ class QuestionListActivity : AppCompatActivity() {
     }
 
     private fun stopLoadingAnimation() {
-        loadingHandler?.removeCallbacks(loadingRunnable ?: return)
+        loadingRunnable?.let { loadingHandler?.removeCallbacks(it) }
         layoutDots.visibility = View.GONE
     }
 
@@ -169,6 +179,7 @@ class QuestionListActivity : AppCompatActivity() {
 
 
                         val completedCount = questionList.count { it.isAnswered }
+                        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRecreateQuestions).visibility = View.VISIBLE
 
                         // 2. 프로그레스 바 및 텍스트 갱신
                         updateProgress(completedCount, currentTotal)

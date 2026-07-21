@@ -3,64 +3,60 @@ package com.example.cac
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.cac.data.ResumeRepository
+import com.example.cac.network.ResumeItem
+import com.example.cac.ui.adapter.ResumeAdapter
 import kotlinx.coroutines.launch
 
-import com.example.cac.R
-import com.example.cac.data.InterviewItem
-import com.example.cac.network.RetrofitClient
-import com.example.cac.ui.adapter.ResumeAdapter
-import com.example.cac.SessionManager
-
 class AllResumeActivity : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_all_interview)
+        setContentView(R.layout.activity_all_resume)
 
-        val rvList = findViewById<RecyclerView>(R.id.rvInterviewList)
+        val rvList = findViewById<RecyclerView>(R.id.rvResumeList)
         rvList.layoutManager = LinearLayoutManager(this)
 
-        // 1. 데이터 로드 (전체 리스트)
-        loadAllData(rvList)
-
-        // 2. 뒤로가기 버튼
         findViewById<TextView>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+        findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
+            startActivity(Intent(this, DashboardActivity::class.java))
+        }
+        findViewById<TextView>(R.id.btnRoadmap).setOnClickListener {
+            startActivity(Intent(this, RoadmapActivity::class.java))
+        }
 
-        // 3. 하단 탭 클릭 이벤트 (필요 시 연결)
-        findViewById<TextView>(R.id.btnNoticeh).setOnClickListener { /* 홈 이동 */ }
+        loadAllData(rvList)
     }
 
     private fun loadAllData(rv: RecyclerView) {
-        val token = SessionManager.getToken(this) ?: return
-
         lifecycleScope.launch {
             try {
-                // Retrofit 호출 (.take(3) 없이 전체 호출)
-                val response = RetrofitClient.api.getInterviews("Bearer $token")
-                val fullList = response.interviews?.map { item ->
-                    InterviewItem(
-                        session_id = item.session_id ?: -1,
-                        date = item.created_at ?: "",
-                        meta = "${item.target_job} / ${item.session_id}번",
-                        score = item.overall_score ?: 0,
-                        feedback = item.feedback,
-                        pdf_url = item.pdf_url
-                    )
-                } ?: emptyList()
-
-                // 전체 리스트 어댑터 연결
-//                rv.adapter = ResumeAdapter(fullList) { selectedItem ->
-//                    val intent = Intent(this@AllResumeActivity, DetailActivity::class.java)
-//                    intent.putExtra("ITEM_DATA", selectedItem)
-//                    startActivity(intent)
-//                }
+                rv.adapter = ResumeAdapter(ResumeRepository.loadResumeItems(this@AllResumeActivity)) { item -> openResumeDetail(item) }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Toast.makeText(this@AllResumeActivity, "이력서 기록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun openResumeDetail(item: ResumeItem) {
+        val resumeId = item.resumeId
+        if (resumeId == null) {
+            Toast.makeText(this, "이 이력서는 상세 분석 id가 아직 없습니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(Intent(this, cardResumeActivity::class.java).apply {
+            putExtra("resume_id", resumeId)
+            putExtra("file_name", item.fileName)
+            putExtra("created_at", item.date)
+            putExtra("target_job", item.targetJob)
+            putExtra("pdf_url", item.pdfUrl)
+        })
     }
 }

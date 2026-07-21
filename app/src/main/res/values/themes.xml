@@ -5,11 +5,33 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+    <style name="Theme.Cac" parent="Base.Theme.Cac" />
 
-    <style name="Theme.Cac." parent="Theme.Material3.DayNight">
-        <item name="android:fontFamily">@font/pretendard_light</item>
-        <item name="fontFamily">@font/pretendard_light</item>
+    <style name="Widget" />
+
+    <style name="Widget.Cac" />
+
+    <style name="Widget.Cac.DetailMetric">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:orientation">vertical</item>
     </style>
 
-    <style name="Theme.Cac" parent="Base.Theme.Cac" />
+    <style name="Widget.Cac.DetailMetricLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#555555</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Widget.Cac.DetailMetricValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:textColor">#3950E7</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

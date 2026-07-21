@@ -100,6 +100,9 @@ class InterviewStartActivity : AppCompatActivity() {
         currentIndex = intent.getIntExtra("current_index", 0)
         sessionId = intent.getIntExtra("session_id", -1)
         totalQuestionCount = intent.getIntExtra("count", 3)
+        if (questionList.isNotEmpty()) {
+            totalQuestionCount = questionList.size
+        }
 
     //답변 여부
         val receivedStates = intent.getBooleanArrayExtra("answered_state_list")?.toList()
@@ -179,13 +182,14 @@ class InterviewStartActivity : AppCompatActivity() {
     }
 
     private fun moveToNextQuestion() {
-        if (currentIndex + 1 < questionList.size) {
+        val nextIndex = nextUnansweredIndex()
+        if (nextIndex != null && nextIndex in questionList.indices) {
             val intent = Intent(this, InterviewStartActivity::class.java).apply {
                 putStringArrayListExtra("question_list", questionList)
                 putIntegerArrayListExtra("question_id_list", questionIdList)
 
                 putExtra("answered_state_list", answeredStateList.toBooleanArray())
-                putExtra("current_index", currentIndex + 1)
+                putExtra("current_index", nextIndex)
                 putExtra("session_id", sessionId)
                 putExtra("count", totalQuestionCount)
             }
@@ -196,6 +200,21 @@ class InterviewStartActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun nextUnansweredIndex(): Int? {
+        if (answeredStateList.isEmpty()) return null
+        for (index in (currentIndex + 1) until answeredStateList.size) {
+            if (!answeredStateList[index]) return index
+        }
+        for (index in 0..currentIndex.coerceAtMost(answeredStateList.lastIndex)) {
+            if (!answeredStateList[index]) return index
+        }
+        return null
+    }
+
+    private fun isAllQuestionsAnswered(): Boolean {
+        return answeredStateList.isNotEmpty() && answeredStateList.all { it }
+    }
 
     private fun ArrayList<Boolean>.getBooleanArray(): BooleanArray {
         val array = BooleanArray(this.size)
@@ -311,11 +330,12 @@ class InterviewStartActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtContentValue).text = "${result.feedback?.strength}\n\n${result.feedback?.weakness}"
         findViewById<TextView>(R.id.txtTipValue).text = result.feedback?.suggestion ?: "팁 없음"
 
-        if (currentIndex + 1 >= totalQuestionCount) {
+        if (isAllQuestionsAnswered()) {
             btnNextQuestion.visibility = View.GONE
             btnFinalMockInterview.visibility = View.VISIBLE
         } else {
             btnNextQuestion.visibility = View.VISIBLE
+            btnFinalMockInterview.visibility = View.GONE
         }
         mainScrollView.post { mainScrollView.smoothScrollTo(0, layoutFeedbackResult.top) }
     }
@@ -339,10 +359,16 @@ class InterviewStartActivity : AppCompatActivity() {
     }
 
     private fun toggleStarStatus() {
+        val token = SessionManager.getToken(this)
+        if (token.isNullOrBlank()) {
+            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         isSaved = !isSaved
         updateStarUI()
 
-        RetrofitClient.api.toggleSaveQuestion(questionId).enqueue(object : Callback<Map<String, Any>> {
+        RetrofitClient.api.toggleSaveQuestion("Bearer $token", questionId).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
                 if (!response.isSuccessful) { isSaved = !isSaved; updateStarUI() }
             }

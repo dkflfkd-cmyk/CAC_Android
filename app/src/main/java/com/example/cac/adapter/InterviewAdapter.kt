@@ -19,7 +19,6 @@ class InterviewAdapter(
         val txtScore: TextView = v.findViewById(R.id.badge)
     }
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_interview, parent, false)
         return VH(v)
@@ -29,12 +28,9 @@ class InterviewAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
-        val dateOnly = item.date.substringBefore("T")
-        holder.txtDate.text = dateOnly
+        holder.txtDate.text = item.date.substringBefore("T").ifBlank { "날짜 미정" }
         holder.txtDetail.text = item.meta
         holder.txtScore.text = "${item.score}점"
-        holder.itemView.setOnClickListener {
-            onClick(item) // 클릭 시 넘어온 함수 실행
-        }
+        holder.itemView.setOnClickListener { onClick(item) }
     }
 }

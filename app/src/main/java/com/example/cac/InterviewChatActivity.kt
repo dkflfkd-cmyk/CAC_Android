@@ -84,7 +84,10 @@ class InterviewChatActivity : AppCompatActivity() {
         sessionId = intent.getIntExtra("session_id", -1)
 
         if (sessionId != -1) {
-            addInterviewerBubble("안녕하세요! 지금부터 면접을 시작하려 합니다. 자기소개 부탁드려도 될까요?")
+            val firstQuestion = intent.getStringExtra("first_question")
+                ?.takeIf { it.isNotBlank() }
+                ?: "안녕하세요! 지금부터 면접을 시작하려 합니다. 자기소개 부탁드려도 될까요?"
+            addInterviewerBubble(firstQuestion)
         } else {
             addInterviewerBubble("세션 정보를 찾을 수 없습니다.")
         }
@@ -137,7 +140,7 @@ class InterviewChatActivity : AppCompatActivity() {
 
         val sharedPreferences = getSharedPreferences("CacPrefs", MODE_PRIVATE)
 
-        RetrofitClient.api.me(token).enqueue(object : Callback<Map<String, Any>> {
+        RetrofitClient.api.me(token, 0, 0, 0).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
@@ -322,6 +325,10 @@ class InterviewChatActivity : AppCompatActivity() {
 
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
+                        Log.d(
+                            "InterviewFlow",
+                            "답변 제출 완료 - is_finished=${body.is_finished}, next_question=${body.next_question}"
+                        )
                         currentProcessingBubble?.text = body.stt_text
                         currentProcessingBubble = null
 

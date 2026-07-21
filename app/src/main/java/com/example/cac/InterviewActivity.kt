@@ -34,6 +34,7 @@ class InterviewActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_interview)
 
+        setupSideMenu()
 
         // 챗화면 전환
         val btnStart = findViewById<android.view.View>(R.id.btnStartCircle)

@@ -25,7 +25,12 @@ interface ApiService {
 
     // 내 정보
     @GET("auth/me")
-    fun me(@Header("Authorization") bearerToken: String): Call<Map<String, Any>>
+    fun me(
+        @Header("Authorization") bearerToken: String,
+        @Query("resume_limit") resumeLimit: Int? = null,
+        @Query("interview_limit") interviewLimit: Int? = null,
+        @Query("saved_question_limit") savedQuestionLimit: Int? = null
+    ): Call<Map<String, Any>>
 
     // 1️ 이력서 업로드
     @Multipart
@@ -47,8 +52,8 @@ interface ApiService {
 
 
     //커리어경로
-    @POST("/recommend")
-    fun getCareerRoadmap(@Body request: Any): Call<RoadmapResponse>
+    @POST("career/recommend")
+    fun getCareerRoadmap(@Body request: CareerRoadmapRequest): Call<RoadmapResponse>
 
 
     // 마이페이지
@@ -56,10 +61,12 @@ interface ApiService {
     suspend fun getResumes(@Header("Authorization") token: String): ResumeResponse
     @GET("auth/me/interviews")
     suspend fun getInterviews(@Header("Authorization") token: String): InterviewResponse
+    @GET("auth/me/saved-questions")
+    suspend fun getMySavedQuestions(@Header("Authorization") token: String): ResponseBody
 
     // 대시보드
     @GET("users/me/dashboard")
-    fun getDashboard(@Header("Authorization") token: String): Call<DashboardResponse>
+    fun getDashboard(@Header("Authorization") token: String): Call<com.google.gson.JsonObject>
 
     @POST("interview/start")
     fun startInterview(@Body request: ResumeRequest): Call<ResumeResponse>
@@ -85,6 +92,7 @@ interface ApiService {
     // 질문저장(즐겨찾기)
     @PATCH("api/v1/questions/{question_id}")
     fun toggleSaveQuestion(
+        @Header("Authorization") token: String,
         @Path("question_id") questionId: Int
     ): Call<Map<String, Any>>
 
@@ -101,6 +109,11 @@ interface ApiService {
     // 피드백 요약
     @GET("api/v1/sessions/{session_id}/summary")
     fun getSessionSummary(
+        @Path("session_id") sessionId: Int
+    ): Call<ResponseBody>
+
+    @GET("api/v1/sessions/{session_id}/result")
+    fun getSessionResultRaw(
         @Path("session_id") sessionId: Int
     ): Call<ResponseBody>
 
@@ -145,6 +158,11 @@ interface ApiService {
     fun getSpeechAnalysis(
         @Path("session_id") sessionId: Int
     ): Call<NewSpeechAnalysisSummaryResponse>
+
+    @GET("api/v1/interview/sessions/{session_id}/analyze-speech")
+    fun getSpeechAnalysisRaw(
+        @Path("session_id") sessionId: Int
+    ): Call<ResponseBody>
 
     @POST("api/v1/resume/{resume_id}/interview/evaluate")
     fun evaluateInterview(
@@ -303,8 +321,11 @@ data class ResumeResponse(
 )
 
 data class ResumeItem(
-    @SerializedName("original_filename") val fileName: String,
-    @SerializedName("created_at") val date: String
+    @SerializedName(value = "resume_id", alternate = ["id"]) val resumeId: Int? = null,
+    @SerializedName(value = "original_filename", alternate = ["filename", "file_name"]) val fileName: String = "이력서",
+    @SerializedName(value = "created_at", alternate = ["date"]) val date: String? = null,
+    @SerializedName("target_job") val targetJob: String? = null,
+    @SerializedName("pdf_url") val pdfUrl: String? = null
 )
 data class ApiInterviewItem(
     val session_id: Int?,
@@ -327,16 +348,25 @@ data class Question(
 
 //커리어경로------------------------
 // 단계별 데이터
-data class Stage(
-    val stage_level: Int,
-    val stage_name: String,
-    val recommendations: List<String>
+data class CareerRoadmapRequest(
+    val user_id: String
 )
 
-// 전체 응답
+data class Stage(
+    val stage_level: Int? = null,
+    val stage_name: String? = null,
+    val recommendations: List<String>? = null
+)
+
 data class RoadmapResponse(
-    val roadmap_title: String,
-    val stages: List<Stage>
+    val type: String? = null,
+    val user_id: String? = null,
+    val roadmap_title: String? = null,
+    val stages: List<Stage>? = null,
+    val recommendations: List<String>? = null,
+    val message: String? = null,
+    @SerializedName("job_match_score") val jobMatchScore: Int? = null,
+    @SerializedName("match_score") val matchScore: Int? = null
 )
 
 //-------------------------------------

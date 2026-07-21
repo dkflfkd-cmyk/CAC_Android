@@ -4,7 +4,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#F7F8FC"
     android:fitsSystemWindows="true"
     tools:context=".cardRoadmapActivity">
 
@@ -65,19 +65,20 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
-                app:cardUseCompatPadding="true">
+                android:layout_marginBottom="18dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#E2E5EF"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_rounded_border"
                     android:orientation="vertical"
                     android:padding="20dp">
 
@@ -101,6 +102,7 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tvProfileName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
@@ -126,9 +128,9 @@
                         <LinearLayout
                             android:id="@+id/layoutGrade"
                             android:layout_width="0dp"
-                            android:layout_height="0dp"
+                            android:layout_height="68dp"
                             android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_score_gradient"
+                            android:background="@drawable/bg_roadmap_profile_chip"
                             android:gravity="center"
                             android:orientation="vertical"
                             android:padding="12dp"
@@ -142,14 +144,15 @@
                                 android:layout_height="wrap_content"
                                 android:alpha="0.7"
                                 android:text="학년"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#6F7482"
                                 android:textSize="11sp" />
 
                             <TextView
+                                android:id="@+id/tvProfileGrade"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="3학년"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#111111"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -157,9 +160,9 @@
                         <LinearLayout
                             android:id="@+id/layoutMajor"
                             android:layout_width="0dp"
-                            android:layout_height="0dp"
+                            android:layout_height="68dp"
                             android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_score_gradient"
+                            android:background="@drawable/bg_roadmap_profile_chip"
                             android:gravity="center"
                             android:orientation="vertical"
                             android:padding="12dp"
@@ -173,14 +176,15 @@
                                 android:layout_height="wrap_content"
                                 android:alpha="0.7"
                                 android:text="전공"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#6F7482"
                                 android:textSize="11sp" />
 
                             <TextView
+                                android:id="@+id/tvProfileMajor"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="컴퓨터공학"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#111111"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -188,8 +192,8 @@
                         <LinearLayout
                             android:id="@+id/layoutGoal"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_score_gradient"
+                            android:layout_height="68dp"
+                            android:background="@drawable/bg_roadmap_profile_chip"
                             android:gravity="center"
                             android:orientation="vertical"
                             android:padding="12dp"
@@ -202,15 +206,16 @@
                                 android:layout_height="wrap_content"
                                 android:alpha="0.7"
                                 android:text="목표"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#6F7482"
                                 android:textSize="11sp" />
 
                             <TextView
+                                android:id="@+id/tvProfileGoal"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:text="프론트엔드\n개발자"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#111111"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -218,21 +223,22 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
-                app:cardUseCompatPadding="true">
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#E2E5EF"
+                app:strokeWidth="1dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_rounded_border"
-                    android:padding="25dp">
+                    android:padding="22dp">
 
                     <TextView
                         android:id="@+id/tvJobMatchTitle"
@@ -274,7 +280,7 @@
                         android:progress="72"
                         android:progressDrawable="@drawable/custom_progress_bar" />
                 </RelativeLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -292,14 +298,16 @@
                 android:overScrollMode="never"
                 tools:listitem="@layout/item_timeline" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
                 android:layout_marginBottom="30dp"
-                app:cardBackgroundColor="#7B8FF7"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp">
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#DDE3FF"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -315,7 +323,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="다음 단계 준비 가이드"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#111111"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -324,12 +332,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:background="@drawable/bg_rounded_blue_card"
-                            android:backgroundTint="#5C72EB"
+                            android:background="@drawable/bg_guide_status"
                             android:paddingHorizontal="10dp"
                             android:paddingVertical="4dp"
                             android:text="3/5 완료"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#3950E7"
                             android:textSize="12sp" />
                     </RelativeLayout>
 
@@ -342,7 +349,7 @@
                         tools:listitem="@layout/item_guide_check" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -425,6 +432,37 @@
             android:text="커리어\n경로"
             android:textColor="#111111"
             android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/loadingRoadmap"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#CCFFFFFF"
+        android:clickable="true"
+        android:elevation="12dp"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomTab"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtSubtitle">
+
+        <ProgressBar
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:indeterminate="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="커리어 경로를 불러오는 중..."
+            android:textColor="#333333"
+            android:textSize="14sp"
             android:textStyle="bold" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

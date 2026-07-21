@@ -7,488 +7,449 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context=".MainActivity"
     android:fitsSystemWindows="true"
-    >
+    tools:context=".MainActivity">
 
-
-    <!-- 상단 타이틀 -->
     <TextView
         android:id="@+id/txtTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textStyle="bold"
         android:layout_marginStart="20dp"
         android:layout_marginTop="45dp"
-        android:text=""
+        android:text="Career AI Coach"
+        android:textSize="16sp"
+        android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/btnMenu"
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:layout_marginEnd="20dp"
-        android:src="@drawable/group_1"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="0dp"
         android:contentDescription="@string/app_name"
+        android:padding="0dp"
+        android:src="@drawable/group_1"
         app:layout_constraintBottom_toBottomOf="@id/txtTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/txtTitle" />
 
-    <!-- 상단 기능 카드 가로 스크롤 -->
-    <HorizontalScrollView
-        android:id="@+id/featureScroll"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/mainScroll"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="35dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
         android:overScrollMode="never"
-        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/bottomTab"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/txtTitle">
 
         <LinearLayout
-            android:id="@+id/featureRow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp">
-
-            <!-- 1) AI 면접 훈련 -->
-            <FrameLayout
-                android:id="@+id/cardInterview"
-                android:layout_width="161dp"
-                android:layout_height="196dp"
-                android:layout_marginEnd="12dp">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/rectangle_7" />
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/txtInterviewTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="AI\n면접\n훈련"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/txtInterviewSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="예상 질문"
-                        android:textColor="#B3CCF2"
-                        android:textSize="12sp"
-                        android:layout_marginTop="8dp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/txtInterviewTitle" />
-
-
-
-                    <TextView
-                        android:id="@+id/arrowInterview"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textColor="#111111"
-                        android:textSize="20sp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </FrameLayout>
-
-            <!-- 2) 이력서/자소서 분석 -->
-            <FrameLayout
-                android:id="@+id/cardResume"
-                android:layout_width="161dp"
-                android:layout_height="196dp"
-                android:layout_marginEnd="12dp">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/rectangle_7" />
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/txtResumeTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="이력서/\n자소서\n분석"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/txtResumeSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="분석 피드백"
-                        android:textColor="#B3CCF2"
-                        android:textSize="12sp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/txtResumeTitle" />
-
-                    <TextView
-                        android:id="@+id/arrowResume"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textColor="#111111"
-                        android:textSize="20sp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </FrameLayout>
-
-
-            <!--예상 질문 리스트-->
-            <FrameLayout
-                android:id="@+id/cardlist"
-                android:layout_width="161dp"
-                android:layout_height="196dp"
-                >
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/rectangle_7" />
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/txtLisTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="예상\n질문\n리스트"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/txtListSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="맞춤 질문"
-                        android:textColor="#B3CCF2"
-                        android:textSize="12sp"
-                        android:layout_marginTop="8dp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/txtLisTitle" />
-
-
-
-                    <TextView
-                        android:id="@+id/arrowList"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="→"
-                        android:textColor="#111111"
-                        android:textSize="20sp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </FrameLayout>
-
-
-        </LinearLayout>
-    </HorizontalScrollView>
-
-    <!-- 최근 면접 -->
-    <TextView
-        android:id="@+id/txtRecent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="23dp"
-        android:layout_marginTop="55dp"
-        android:text="최근 면접"
-        android:textColor="#111111"
-        android:textSize="13sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/featureScroll" />
-
-    <!-- 최근 면접 카드(2개) -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardRecent"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="10dp"
-        app:cardCornerRadius="14dp"
-        app:cardElevation="6dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/txtRecent">
-
-        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:paddingTop="32dp"
+            android:paddingBottom="24dp">
 
-            <!-- Row 1 -->
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/recentRow1"
+            <HorizontalScrollView
+                android:id="@+id/featureScroll"
                 android:layout_width="match_parent"
-                android:layout_height="62dp"
-                android:background="#FFFFFF">
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                android:scrollbars="none">
 
-                <FrameLayout
-                    android:id="@+id/iconBox1"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_mp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent">
-
-                    <ImageView
-                        android:id="@+id/iconChat1"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginLeft="0.5dp"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/mdi_message_outline"/>
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/date1"
+                <LinearLayout
+                    android:id="@+id/featureRow"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="2025.01.08"
-                    android:textColor="#111111"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@id/iconBox1"
-                    app:layout_constraintTop_toTopOf="@id/iconBox1" />
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
 
-                <TextView
-                    android:id="@+id/desc1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginTop="6dp"
-                    android:text="질문 5개 / 소요시간 15분"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toEndOf="@id/iconBox1"
-                    app:layout_constraintTop_toBottomOf="@id/date1" />
+                    <FrameLayout
+                        android:id="@+id/cardInterview"
+                        android:layout_width="161dp"
+                        android:layout_height="196dp"
+                        android:layout_marginEnd="12dp">
 
-                <TextView
-                    android:id="@+id/score1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_score"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="82점"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="@id/iconBox1"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/iconBox1"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/rectangle_7" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-            <!-- divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="10dp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="AI면접\n연습"
+                                android:textColor="#FFFFFF"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
 
-            <!-- Row 2 -->
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/recentRow2"
-                android:layout_width="match_parent"
-                android:layout_height="62dp"
-                android:background="#FFFFFF">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="예상 질문"
+                                android:textColor="#DDE4FF"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
 
-                <FrameLayout
-                    android:id="@+id/iconChat2"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_mp_light"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    <FrameLayout
+                        android:id="@+id/cardResume"
+                        android:layout_width="161dp"
+                        android:layout_height="196dp"
+                        android:layout_marginEnd="12dp">
 
-                    <ImageView
-                        android:id="@+id/iconChat21"
-                        android:layout_marginLeft="0.5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/mdi_message_outline"/>
-                </FrameLayout>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/rectangle_7" />
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/date2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="2025.01.06"
-                    android:textColor="#111111"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@id/iconChat2"
-                    app:layout_constraintTop_toTopOf="@id/iconChat2" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="이력서\n자소서 분석"
+                                android:textColor="#FFFFFF"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/desc2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginTop="6dp"
-                    android:text="질문 5개 / 소요시간 16분"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toEndOf="@id/iconChat2"
-                    app:layout_constraintTop_toBottomOf="@id/date2" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="분석 피드백"
+                                android:textColor="#DDE4FF"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
 
-                <TextView
-                    android:id="@+id/score2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_score_light"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="78점"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    app:layout_constraintBottom_toBottomOf="@id/iconChat2"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/iconChat2" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                    <FrameLayout
+                        android:id="@+id/cardlist"
+                        android:layout_width="161dp"
+                        android:layout_height="196dp">
 
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/rectangle_7" />
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="예상 질문\n리스트"
+                                android:textColor="#FFFFFF"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
 
-
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardAptitude"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="0dp"
-
-        app:layout_constraintTop_toBottomOf="@id/cardRecent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_aptitude_bg"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="맞춤 질문"
+                                android:textColor="#DDE4FF"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <TextView
-                android:id="@+id/tvAptitudeSub"
+                android:id="@+id/txtRecent"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="23dp"
+                android:layout_marginTop="42dp"
+                android:paddingVertical="6dp"
+                android:text="최근 면접"
+                android:textColor="#111111"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardRecent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="24dp"
-                android:text="어떤 직무가 맞을지 고민이라면?"
-                android:textColor="#4E5FC7"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_marginTop="6dp"
+                android:layout_marginEnd="20dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="4dp">
 
-            <TextView
-                android:id="@+id/tvAptitudeTitle"
-                android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:id="@+id/txtRecentEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingTop="24dp"
+                        android:paddingBottom="24dp"
+                        android:text="아직 면접 기록이 없습니다."
+                        android:textColor="#888888"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/recentRow1"
+                        android:layout_width="match_parent"
+                        android:layout_height="62dp"
+                        android:background="#FFFFFF">
+
+                        <FrameLayout
+                            android:id="@+id/iconBox1"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_mp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/mdi_message_outline" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/date1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:text="날짜 미정"
+                            android:textColor="#111111"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:layout_constraintEnd_toStartOf="@id/score1"
+                            app:layout_constraintStart_toEndOf="@id/iconBox1"
+                            app:layout_constraintTop_toTopOf="@id/iconBox1" />
+
+                        <TextView
+                            android:id="@+id/desc1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginTop="6dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="면접 기록"
+                            android:textColor="#6B7280"
+                            android:textSize="12sp"
+                            app:layout_constraintEnd_toStartOf="@id/score1"
+                            app:layout_constraintStart_toEndOf="@id/iconBox1"
+                            app:layout_constraintTop_toBottomOf="@id/date1" />
+
+                        <TextView
+                            android:id="@+id/score1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_score"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="6dp"
+                            android:text="0점"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="@id/iconBox1"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/iconBox1" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/recentSpacer"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/recentRow2"
+                        android:layout_width="match_parent"
+                        android:layout_height="62dp"
+                        android:background="#FFFFFF">
+
+                        <FrameLayout
+                            android:id="@+id/iconChat2"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_mp_light"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/mdi_message_outline" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/date2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:text="날짜 미정"
+                            android:textColor="#111111"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:layout_constraintEnd_toStartOf="@id/score2"
+                            app:layout_constraintStart_toEndOf="@id/iconChat2"
+                            app:layout_constraintTop_toTopOf="@id/iconChat2" />
+
+                        <TextView
+                            android:id="@+id/desc2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginTop="6dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="면접 기록"
+                            android:textColor="#6B7280"
+                            android:textSize="12sp"
+                            app:layout_constraintEnd_toStartOf="@id/score2"
+                            app:layout_constraintStart_toEndOf="@id/iconChat2"
+                            app:layout_constraintTop_toBottomOf="@id/date2" />
+
+                        <TextView
+                            android:id="@+id/score2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_score_light"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="6dp"
+                            android:text="0점"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="@id/iconChat2"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/iconChat2" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAptitude"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginLeft="2dp"
-                android:text="적성 검사"
-                android:textColor="#4049A8"
-                android:textSize="20sp"
-                android:fontFamily="@font/pretendard_bold"
-                app:layout_constraintStart_toStartOf="@id/tvAptitudeSub"
-                app:layout_constraintTop_toBottomOf="@id/tvAptitudeSub" />
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#E4E7F5"
+                app:strokeWidth="1dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDoAptitudeTest"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="244dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="8dp"
-                android:text="검사하기 >"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:backgroundTint="#111111"
-                app:cornerRadius="8dp"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="128dp"
+                    android:paddingStart="18dp"
+                    android:paddingTop="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="18dp">
 
-                app:layout_constraintStart_toStartOf="@id/tvAptitudeTitle"
-                app:layout_constraintTop_toBottomOf="@id/tvAptitudeSub"
-                android:layout_marginTop="20dp" />
+                    <FrameLayout
+                        android:id="@+id/aptitudeIconBox"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_aptitude_icon"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@string/app_name"
+                            android:src="@drawable/ic_aptitude_compass" />
+                    </FrameLayout>
 
+                    <TextView
+                        android:id="@+id/tvAptitudeTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="적성 검사"
+                        android:textColor="#111111"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/aptitudeIconBox"
+                        app:layout_constraintTop_toTopOf="@id/aptitudeIconBox" />
 
+                    <TextView
+                        android:id="@+id/tvAptitudeSub"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginEnd="10dp"
+                        android:ellipsize="end"
+                        android:lineSpacingExtra="3dp"
+                        android:maxLines="2"
+                        android:text="내 성향에 맞는 직무를 빠르게 확인해보세요"
+                        android:textColor="#6B7280"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/aptitudeIconBox"
+                        app:layout_constraintTop_toBottomOf="@id/tvAptitudeTitle" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDoAptitudeTest"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="16dp"
+                        android:text="검사하기"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="#3950E7"
+                        app:cornerRadius="10dp"
+                        app:icon="@drawable/ic_play_arrow"
+                        app:iconGravity="textStart"
+                        app:iconPadding="4dp"
+                        app:iconSize="16dp"
+                        app:iconTint="#FFFFFF"
+                        android:layout_marginTop="14dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tvAptitudeSub" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-
-
-    <!-- 하단 탭 -->
     <LinearLayout
         android:id="@+id/bottomTab"
         android:layout_width="0dp"
@@ -506,76 +467,55 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@null"
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="홈"
             android:textColor="#111111"
             android:textSize="12sp"
-            android:textStyle="bold"
-
-            android:clickable="true"
-            android:focusable="true"
-            android:background="@null"/>
-
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnInterview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@null"
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="AI면접"
             android:textColor="#111111"
             android:textSize="12sp"
-            android:textStyle="bold"
-
-            android:clickable="true"
-            android:focusable="true"
-            android:background="@null"/>
-
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnNoticev"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@null"
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="대시보드"
             android:textColor="#111111"
             android:textSize="12sp"
-            android:textStyle="bold"
-
-            android:clickable="true"
-            android:focusable="true"
-            android:background="@null"/>
-
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnNoticev2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@null"
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-
             android:text="MY"
             android:textColor="#111111"
             android:textSize="12sp"
-            android:textStyle="bold"
-
-            android:clickable="true"
-            android:focusable="true"
-            android:background="@null"/>
-
+            android:textStyle="bold" />
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
