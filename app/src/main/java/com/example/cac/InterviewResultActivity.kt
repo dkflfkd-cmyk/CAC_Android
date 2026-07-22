@@ -45,6 +45,7 @@ class InterviewResultActivity : AppCompatActivity() {
 
         setupSideMenu()
         setupTitle()
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.INTERVIEW)
 
         radarChart = findViewById(R.id.radarChart)
         recyclerViewFeedback = findViewById(R.id.recyclerFeedback)

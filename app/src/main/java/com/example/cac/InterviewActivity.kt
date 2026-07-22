@@ -35,6 +35,7 @@ class InterviewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_interview)
 
         setupSideMenu()
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.INTERVIEW)
 
         // 챗화면 전환
         val btnStart = findViewById<android.view.View>(R.id.btnStartCircle)

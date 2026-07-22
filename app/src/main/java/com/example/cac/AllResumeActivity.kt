@@ -17,6 +17,7 @@ class AllResumeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_all_resume)
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.MY)
 
         val rvList = findViewById<RecyclerView>(R.id.rvResumeList)
         rvList.layoutManager = LinearLayoutManager(this)
@@ -28,8 +29,11 @@ class AllResumeActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btnNoticev).setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
         }
-        findViewById<TextView>(R.id.btnRoadmap).setOnClickListener {
+        findViewById<TextView>(R.id.btnhs).setOnClickListener {
             startActivity(Intent(this, RoadmapActivity::class.java))
+        }
+        findViewById<TextView>(R.id.btnRoadmap).setOnClickListener {
+            startActivity(Intent(this, MYActivity::class.java))
         }
 
         loadAllData(rvList)

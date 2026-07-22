@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
         setupSideMenu()
         setupTitle()
         setupClickListeners()
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.HOME)
         loadRecentInterviews()
     }
 

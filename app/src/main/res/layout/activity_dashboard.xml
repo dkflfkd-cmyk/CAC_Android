@@ -924,8 +924,7 @@
             android:gravity="center"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-            android:text="커리어
-경로"
+            android:text="커리어\n경로"
             android:textColor="#111111"
             android:textSize="12sp"
             android:textStyle="bold" />

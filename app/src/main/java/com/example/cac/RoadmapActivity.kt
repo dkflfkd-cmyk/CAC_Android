@@ -46,6 +46,7 @@ class RoadmapActivity : AppCompatActivity() {
 
         setupTitle()
         setupBottomButtons()
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.ROADMAP)
         loadProfileAndRoadmap()
     }
 
@@ -57,7 +58,10 @@ class RoadmapActivity : AppCompatActivity() {
             startActivity(Intent(this, DashboardActivity::class.java))
         }
         findViewById<TextView>(R.id.btnhs).setOnClickListener {
-            startActivity(Intent(this, DashboardActivity::class.java))
+            // 현재 화면
+        }
+        findViewById<TextView>(R.id.btnRoadmap).setOnClickListener {
+            startActivity(Intent(this, MYActivity::class.java))
         }
     }
 

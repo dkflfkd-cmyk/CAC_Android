@@ -38,6 +38,7 @@ class MYActivity : AppCompatActivity() {
         setContentView(R.layout.activity_myactivity)
 
         setupSideMenu()
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.MY)
         findViewById<RecyclerView>(R.id.rvInterview).layoutManager = LinearLayoutManager(this)
         findViewById<RecyclerView>(R.id.rvResume).layoutManager = LinearLayoutManager(this)
         findViewById<RecyclerView>(R.id.rvSavedQuestions).layoutManager = LinearLayoutManager(this)

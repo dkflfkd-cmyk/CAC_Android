@@ -78,6 +78,7 @@ class DashboardActivity : AppCompatActivity() {
         bindViews()
         setupTitle()
         setupBottomButtons()
+        BottomNavHelper.apply(this, BottomNavHelper.Tab.DASHBOARD)
         setupRecentInterviewList()
         loadDashboard()
         loadRecentInterviews()
