@@ -9,7 +9,7 @@ import com.example.cac.Session
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://52.79.211.82:8000/"
+    private const val BASE_URL = "http://43.201.96.95:8000/"
 
     private val gson = GsonBuilder()
         .serializeNulls()
